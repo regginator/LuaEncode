@@ -1,5 +1,5 @@
 # LuaEncode
-Utility function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
+Utility Function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
 
 ___
 

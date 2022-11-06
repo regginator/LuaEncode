@@ -1,4 +1,4 @@
--- LuaEncode - Utility function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
+-- LuaEncode - Utility Function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
 -- https://github.com/regginator/LuaEnocde | reggie <3
 
 --[[
