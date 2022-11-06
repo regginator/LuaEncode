@@ -89,9 +89,11 @@ local function LuaEncode(args)
                 ExplicitlyDefinedKeyAdded = true
             end,
             ["boolean"] = function()
+                local BoolAsString = (Key == true and "true") or (Key == false and "false")
+
                 Output = Output .. string.format(
                     "[%s]",
-                    (Key == true and "true") or (Key == false and "false")
+                    BoolAsString
                 )
 
                 ExplicitlyDefinedKeyAdded = true
@@ -166,7 +168,8 @@ local function LuaEncode(args)
     end
 
     -- Aaaaand close it on up!
-    Output = Output .. ((#IndentString > 0 and string.sub(IndentString, 1, -IndentCount - 1)) or "") ..  "}"
+    local EndingIndentString = (#IndentString > 0 and string.sub(IndentString, 1, -IndentCount - 1)) or ""
+    Output = Output .. EndingIndentString ..  "}"
     return Output
 end
 
