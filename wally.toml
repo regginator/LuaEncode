@@ -1,0 +1,10 @@
+[package]
+name = "regginator/luaencode"
+description = "Utility function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+ "
+version = "0.1.0"
+license = "MIT"
+authors = ["Reggie <reggie@latte.to>"]
+realm = "shared"
+registry = "https://github.com/UpliftGames/wally-index"
+
+[dependencies]

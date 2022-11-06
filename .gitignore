@@ -1,0 +1,9 @@
+# Rojo Build
+./build
+build.rbxm
+build.rbxmx
+LuaEncode.rbxm
+LuaEncode.rbxmx
+
+# No need for wally.lock, LuaEncode doesn't need any 3rd party modules
+wally.lock
