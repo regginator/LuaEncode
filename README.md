@@ -27,7 +27,7 @@ ___
     - In Your Project Deps w/ Wally
         ```toml
         [dependencies]
-        LuaEncode = "regginator/LuaEncode@0.1.0"
+        LuaEncode = "regginator/luaencode@0.1.0"
         ```
 - ### Git Submodule
     If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
