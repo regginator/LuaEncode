@@ -1,6 +1,8 @@
 -- LuaEncode - Utility Function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
 -- https://github.com/regginator/LuaEnocde | reggie <3
 
+local Type = typeof or type -- Roblox engine DataType support, if `typeof` global supported
+
 --[[
 <string> LuaEncode(<table?> args):
 
@@ -145,8 +147,8 @@ local function LuaEncode(args)
             end,
         }
 
-        local KeyType = type(Key)
-        local ValueType = type(Value)
+        local KeyType = Type(Key)
+        local ValueType = Type(Value)
 
         if KeyTypeCases[KeyType] and ValueTypeCases[ValueType] then
             KeyTypeCases[KeyType]()
