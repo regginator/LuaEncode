@@ -150,7 +150,7 @@ ___
 | [Vector3](https://create.roblox.com/docs/reference/engine/datatypes/Vector3)                                  | `Vector3.new()`                                   | ✔ |
 | [Vector3int16](https://create.roblox.com/docs/reference/engine/datatypes/Vector3int16)                        | `Vector3int16.new()`                              | ✔ |
 
-*(Official documented Roblox DataType list [here](https://create.roblox.com/docs/reference/engine/datatypes))*
+*(Official documentation Roblox DataType list [here](https://create.roblox.com/docs/reference/engine/datatypes))*
 
 ___
 
