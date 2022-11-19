@@ -4,13 +4,14 @@ Utility Function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
 ___
 
 ## About & Features
-This is a simple utility function developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data-structures. This script natively supports both Luau, and Lua 5.1+.
+This is a simple utility function developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data structures. This script natively supports both Luau, and Lua 5.1+.
 
 ### Features:
-- Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
-- "Pretty Printing" & custom indentation config.
-- **(Currently Unimplemented)** `typeof()` support for custom Roblox datatypes such as `Instance`, `UDim`, `Vector`, `DateTime`, etc..
-- Raw key/value set with `FunctionsReturnRaw`. (See API below for more info)
+- Full serialization and output of basic types `number`, `string`, `table`, and `boolean` for keys/values.
+- Flexible and friendly API.
+- "Pretty Printing" & custom indentation configuration.
+- Optional `typeof()` support for **full** custom Roblox DataType support (i.e `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
+- Raw keys/values with `FunctionsReturnRaw`.
 
 ___
 
@@ -27,40 +28,47 @@ ___
     - In Your Project Deps w/ Wally
         ```toml
         [dependencies]
-        LuaEncode = "regginator/luaencode@0.1.0"
+        LuaEncode = "regginator/luaencode@0.2.0"
         ```
 - ### Git Submodule
     If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
+- ### Loadstring by Release URL
+    If you're using a script utility with direct access to `loadstring()`, you can use the following line to import the module into your project:
+    ```lua
+    local LuaEncode = loadstring(game:HttpGet("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
+    ```
+    *(Or with HttpService if using the Roblox API)*
+    ```lua
+    local HttpService = game:GetService("HttpService")
+    local LuaEncode = loadstring(HttpService:GetAsync("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
+    ```
+
 
 ___
 
-## Usage
+## Basic Usage
 ```lua
--- Basic usage example
--- github.com/regginator/LuaEncode
+local LuaEncode = require("src/LuaEncode")
 
-local LuaEncode = require(script.LuaEncode)
-
-local SomeTable = {
+local Table = {
     foo = "bar",
     baz = {
+        1,
+        "one",
+        true,
+        false,
+        [90] = "ninety",
         ["hi mom"] = "hello world",
-        [5] = "qux",
-        [{123, 456, 789}] = {
-            1,
-            2,
-            "goodbye"
-        },
-        syn = "tax",
-        "example",
     },
+    qux = function()
+        return "\"hi!\""
+    end,
 }
 
-local Encoded = LuaEncode({
-    Table = SomeTable,
-    FunctionsReturnRaw = true, -- `false` by default
-    PrettyPrint = true, -- `false` by default
+local Encoded = LuaEncode(Table, {
+    PrettyPrinting = true, -- `false` by default
     IndentCount = 4, -- `0` by default
+    FunctionsReturnRaw = true, -- `false` by default
 })
 
 print(Encoded)
@@ -69,15 +77,13 @@ print(Encoded)
 Expected Output:
 ```lua
 {
+    qux = "hi!",
     baz = {
-        "example",
-        syn = "tax",
-        [{123, 456, 789}] = {
-            1,
-            2,
-            "goodbye"
-        },
-        [5] = "qux",
+        1,
+        "one",
+        true,
+        false,
+        [90] = "ninety",
         ["hi mom"] = "hello world"
     },
     foo = "bar"
@@ -88,14 +94,63 @@ ___
 
 ## API
 ```lua
-<string> LuaEncode(<table?: {}> args)
+<string> LuaEncode(<table> tbl, <table?> options)
 ```
-| Argument | Type | Description |
-|----------|------|-------------|
-| Table | `<table?: {}>` | Input table to serialize and return. |
-| FunctionsReturnRaw | `<bool?: false>` | If functions in said table return back a "raw" value to place in the output as the key/value. |
-| PrettyPrint | `<bool?: false>` | Whether or not the output should use "pretty printing". |
-| IndentCount | `<number?: 0>` | The amount of "spaces" that should be indented per entry. |
+
+#### Options:
+| Argument           | Type              | Description                         |
+|:-------------------|:------------------|:------------------------------------|
+| PrettyPrinting     | `<bool?:false>`  | Whether or not the output should use "pretty printing". |
+| IndentCount        | `<number?:0>`    | The amount of "spaces" that should be indented per entry. |
+| FunctionsReturnRaw | `<bool?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
+
+___
+
+## Custom Roblox Lua DataType Coverage
+✔ Implemented | ➖ Partially Implemented | ❌ Unimplemented | ⛔ Never
+
+| DataType                                                                                                      | Serialized As                                     | Implemented |
+|:--------------------------------------------------------------------------------------------------------------|:--------------------------------------------------|:-----------:|
+| [Axes](https://create.roblox.com/docs/reference/engine/datatypes/Axes)                                        | `Axes.new()`                                      | ✔ |
+| [BrickColor](https://create.roblox.com/docs/reference/engine/datatypes/BrickColor)                            | `BrickColor.new()`                                | ✔ |
+| [CFrame](https://create.roblox.com/docs/reference/engine/datatypes/CFrame)                                    | `CFrame.new()`                                    | ✔ |
+| [CatalogSearchParams](https://create.roblox.com/docs/reference/engine/datatypes/CatalogSearchParams)          | `CatalogSearchParams.new()`                       | ➖ |
+| [Color3](https://create.roblox.com/docs/reference/engine/datatypes/Color3)                                    | `Color3.new()`                                    | ✔ |
+| [ColorSequence](https://create.roblox.com/docs/reference/engine/datatypes/ColorSequence)                      | `ColorSequence.new(<ColorSequenceKeypoints>)`     | ✔ |
+| [ColorSequenceKeypoint](https://create.roblox.com/docs/reference/engine/datatypes/ColorSequenceKeypoint)      | `ColorSequenceKeypoint.new()`                     | ✔ |
+| [DateTime](https://create.roblox.com/docs/reference/engine/datatypes/DateTime)                                | `DateTime.fromUnixTimestamp()`                    | ✔ |
+| [DockWidgetPluginGuiInfo](https://create.roblox.com/docs/reference/engine/datatypes/DockWidgetPluginGuiInfo)  | `DockWidgetPluginGuiInfo.new()`                   | ➖ |
+| [Enum](https://create.roblox.com/docs/reference/engine/datatypes/Enum)                                        | `Enum.<EnumType>`                                 | ✔ |
+| [EnumItem](https://create.roblox.com/docs/reference/engine/datatypes/EnumItem)                                | `Enum.<EnumType>.<EnumItem>`                      | ✔ |
+| [Enums](https://create.roblox.com/docs/reference/engine/datatypes/Enums)                                      | `Enum`                                            | ✔ |
+| [Faces](https://create.roblox.com/docs/reference/engine/datatypes/Faces)                                      | `Faces.new()`                                     | ✔ |
+| [FloatCurveKey](https://create.roblox.com/docs/reference/engine/datatypes/FloatCurveKey)                      | `FloatCurveKey.new()`                             | ✔ |
+| [Font](https://create.roblox.com/docs/reference/engine/datatypes/Font)                                        | `Font.new()`                                      | ✔ |
+| [Instance](https://create.roblox.com/docs/reference/engine/datatypes/Instance)                                | `Instance.new()`                                  | ➖ |
+| [NumberRange](https://create.roblox.com/docs/reference/engine/datatypes/NumberRange)                          | `NumberRange.new()`                               | ✔ |
+| [NumberSequence](https://create.roblox.com/docs/reference/engine/datatypes/NumberSequence)                    | `NumberSequence.new(<NumberSequenceKeypoints>)`   | ✔ |
+| [NumberSequenceKeypoint](https://create.roblox.com/docs/reference/engine/datatypes/NumberSequenceKeypoint)    | `NumberSequenceKeypoint.new()`                    | ✔ |
+| [OverlapParams](https://create.roblox.com/docs/reference/engine/datatypes/OverlapParams)                      | `OverlapParams.new()`                             | ➖ |
+| [PathWaypoint](https://create.roblox.com/docs/reference/engine/datatypes/PathWaypoint)                        | `PathWaypoint.new()`                              | ✔ |
+| [PhysicalProperties](https://create.roblox.com/docs/reference/engine/datatypes/PhysicalProperties)            | `PhysicalProperties.new()`                        | ✔ |
+| [RBXScriptConnection](https://create.roblox.com/docs/reference/engine/datatypes/RBXScriptConnection)          | `N/A`                                             | ⛔ |
+| [RBXScriptSignal](https://create.roblox.com/docs/reference/engine/datatypes/RBXScriptSignal)                  | `N/A`                                             | ⛔ |
+| [Random](https://create.roblox.com/docs/reference/engine/datatypes/Random)                                    | `Random.new()`                                    | ➖ |
+| [Ray](https://create.roblox.com/docs/reference/engine/datatypes/Ray#summary-constructors)                     | `Ray.new()`                                       | ✔ |
+| [RaycastParams](https://create.roblox.com/docs/reference/engine/datatypes/RaycastParams)                      | `RaycastParams.new()`                             | ➖ |
+| [RaycastResult](https://create.roblox.com/docs/reference/engine/datatypes/RaycastResult)                      | `N/A`                                             | ⛔ |
+| [Rect](https://create.roblox.com/docs/reference/engine/datatypes/Rect#summary-constructors)                   | `Rect.new()`                                      | ✔ |
+| [Region3](https://create.roblox.com/docs/reference/engine/datatypes/Region3)                                  | `Region3.new()`                                   | ➖ |
+| [Region3int16](https://create.roblox.com/docs/reference/engine/datatypes/Region3int16)                        | `Region3int16.new()`                              | ✔ |
+| [TweenInfo](https://create.roblox.com/docs/reference/engine/datatypes/TweenInfo)                              | `TweenInfo.new()`                                 | ✔ |
+| [UDim](https://create.roblox.com/docs/reference/engine/datatypes/UDim)                                        | `UDim.new()`                                      | ✔ |
+| [UDim2](https://create.roblox.com/docs/reference/engine/datatypes/UDim2)                                      | `UDim2.new()`                                     | ✔ |
+| [Vector2](https://create.roblox.com/docs/reference/engine/datatypes/Vector2)                                  | `Vector2.new()`                                   | ✔ |
+| [Vector2int16](https://create.roblox.com/docs/reference/engine/datatypes/Vector2int16)                        | `Vector2int16.new()`                              | ✔ |
+| [Vector3](https://create.roblox.com/docs/reference/engine/datatypes/Vector3)                                  | `Vector3.new()`                                   | ✔ |
+| [Vector3int16](https://create.roblox.com/docs/reference/engine/datatypes/Vector3int16)                        | `Vector3int16.new()`                              | ✔ |
+
+*(Official documented Roblox DataType list [here](https://create.roblox.com/docs/reference/engine/datatypes))*
 
 ___
 

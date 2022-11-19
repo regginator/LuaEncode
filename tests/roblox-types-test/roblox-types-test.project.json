@@ -1,0 +1,16 @@
+{
+    "name": "LuaEncode-roblox-types-test",
+    "tree": {
+        "$className": "DataModel",
+
+        "ServerScriptService": {
+            "LuaEncode-roblox-types-test": {
+                "$path": "AllRobloxTypes.server.lua",
+
+                "LuaEncode": {
+                    "$path": "../../src/LuaEncode.lua"
+                }
+            }
+        }
+    }
+}
