@@ -128,17 +128,22 @@ local function LuaEncode(inputTable, options)
 
             -- Axes.new()
             TypeCases["Axes"] = function(value)
+                local EncodedArgs = {}
+                local EnumValues = {
+                    ["Enum.Axis.X"] = value.X, -- These return bools
+                    ["Enum.Axis.Y"] = value.Y,
+                    ["Enum.Axis.Z"] = value.Z,
+                }
+
+                for EnumValue, IsEnabled in next, EnumValues do
+                    if IsEnabled then
+                        table.insert(EncodedArgs, EnumValue)
+                    end
+                end
+
                 return string.format(
                     "Axes.new(%s)",
-                    table.concat(
-                        {
-                            -- This is better than manually looping through enum representations, haha
-                            (value.X and "Enum.Axis.X") or nil,
-                            (value.Y and "Enum.Axis.Y") or nil,
-                            (value.Z and "Enum.Axis.Z") or nil,
-                        },
-                        ValueSeperator
-                    )
+                    table.concat(EncodedArgs, ValueSeperator)
                 ), true
             end
 
@@ -225,11 +230,6 @@ local function LuaEncode(inputTable, options)
                 end
             end
 
-            -- ^^^, temporary solution like CatalogSearchParams
-            TypeCases["DockWidgetPluginGuiInfo"] = function()
-                return "DockWidgetPluginGuiInfo.new()"
-            end
-
             -- Enum (e.g. `Enum.UserInputType`)
             TypeCases["Enum"] = function(value)
                 return "Enum." .. tostring(value), true -- For now, this is the behavior of enums in tostring.. I have no other choice atm
@@ -247,19 +247,25 @@ local function LuaEncode(inputTable, options)
 
             -- Faces.new() | Similar to Axes.new()
             TypeCases["Faces"] = function(value)
+                local EncodedArgs = {}
+                local EnumValues = {
+                    ["Enum.NormalId.Top"] = value.Top, -- These return bools
+                    ["Enum.NormalId.Bottom"] = value.Bottom,
+                    ["Enum.NormalId.Left"] = value.Left,
+                    ["Enum.NormalId.Right"] = value.Right,
+                    ["Enum.NormalId.Back"] = value.Back,
+                    ["Enum.NormalId.Front"] = value.Front,
+                }
+
+                for EnumValue, IsEnabled in next, EnumValues do
+                    if IsEnabled then
+                        table.insert(EncodedArgs, EnumValue)
+                    end
+                end
+
                 return string.format(
                     "Faces.new(%s)",
-                    table.concat(
-                        {
-                            (value.Top and "Enum.NormalId.Top") or nil,
-                            (value.Bottom and "Enum.NormalId.Bottom") or nil,
-                            (value.Left and "Enum.NormalId.Left") or nil,
-                            (value.Right and "Enum.NormalId.Right") or nil,
-                            (value.Back and "Enum.NormalId.Back") or nil,
-                            (value.Front and "Enum.NormalId.Front") or nil,
-                        },
-                        ValueSeperator
-                    )
+                    table.concat(EncodedArgs, ValueSeperator)
                 ), true
             end
 
