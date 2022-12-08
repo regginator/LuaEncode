@@ -197,29 +197,33 @@ local function LuaEncode(inputTable, options)
                 return string.format("DateTime.fromUnixTimestamp(%d)", value.UnixTimestamp), true
             end
 
-            --[[
-            -- Can't implement atm, properties throw an error on index if not a studio plugin; COULD
-            -- implement a pcall check for support later, but this isn't priority
-
-            -- DockWidgetPluginGuiInfo.new()
+            -- DockWidgetPluginGuiInfo.new() | Properties seem to throw an error on index if the scope isn't a Studio
+            -- plugin, so we're wrapping everything in a pcall JIC.
             TypeCases["DockWidgetPluginGuiInfo"] = function(value)
-                return string.format(
-                    "DockWidgetPluginGuiInfo.new(%s)",
-                    table.concat(
-                        {
-                            "Enum.InitialDockState.Float", -- Have to override whatever it'd actually be.. api doesn't provide this..?
-                            value.InitialEnabled,
-                            value.InitialEnabledShouldOverrideRestore,
-                            value.FloatingXSize,
-                            value.FloatingYSize,
-                            value.MinWidth,
-                            value.MinHeight
-                        },
-                        ValueSeperator
+                local Success, ErrorOrValue = pcall(function()
+                    return string.format(
+                        "DockWidgetPluginGuiInfo.new(%s)",
+                        table.concat(
+                            {
+                                "Enum.InitialDockState.Float", -- Have to override whatever it'd actually be.. api doesn't provide this..?
+                                value.InitialEnabled,
+                                value.InitialEnabledShouldOverrideRestore,
+                                value.FloatingXSize,
+                                value.FloatingYSize,
+                                value.MinWidth,
+                                value.MinHeight
+                            },
+                            ValueSeperator
+                        )
                     )
-                ), true
+                end)
+
+                if Success then
+                    return ErrorOrValue, true
+                else
+                    return string.format("DockWidgetPluginGuiInfo.new() -- Error on serialization: %q", ErrorOrValue)
+                end
             end
-            ]]
 
             -- ^^^, temporary solution like CatalogSearchParams
             TypeCases["DockWidgetPluginGuiInfo"] = function()
