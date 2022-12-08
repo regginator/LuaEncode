@@ -241,28 +241,21 @@ local function LuaEncode(inputTable, options)
                 return "Enum", true
             end
 
-            -- Faces.new() | Similar to Axes.new
+            -- Faces.new() | Similar to Axes.new()
             TypeCases["Faces"] = function(value)
-                local EncodedArgs = {}
-                local EnumRepresentations = {
-                    [value.Top] = "Enum.NormalId.Top",
-                    [value.Bottom] = "Enum.NormalId.Bottom",
-                    [value.Left] = "Enum.NormalId.Left",
-                    [value.Right] = "Enum.NormalId.Right",
-                    [value.Back] = "Enum.NormalId.Back",
-                    [value.Front] = "Enum.NormalId.Front",
-                }
-
-                for IsEnabled, EnumRepresentation in next, EnumRepresentations do
-                    if IsEnabled == true then
-                        -- Add enum representation to EncodedArgs
-                        table.insert(EncodedArgs, EnumRepresentation)
-                    end
-                end
-
                 return string.format(
                     "Faces.new(%s)",
-                    table.concat(EncodedArgs, ValueSeperator)
+                    table.concat(
+                        {
+                            (value.Top and "Enum.NormalId.Top") or nil,
+                            (value.Bottom and "Enum.NormalId.Bottom") or nil,
+                            (value.Left and "Enum.NormalId.Left") or nil,
+                            (value.Right and "Enum.NormalId.Right") or nil,
+                            (value.Back and "Enum.NormalId.Back") or nil,
+                            (value.Front and "Enum.NormalId.Front") or nil,
+                        },
+                        ValueSeperator
+                    )
                 ), true
             end
 
