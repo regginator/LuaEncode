@@ -404,10 +404,28 @@ local function LuaEncode(inputTable, options)
                 ), true
             end
 
-            -- Region3.new() | Roblox doesn't provide read properties for min/max (the .new() params)
-            -- on Region3 but THEY DO ON REGION3INT16..???
-            TypeCases["Region3"] = function()
-                return "Region3.new()", true
+            -- Region3.new() | Roblox doesn't provide read properties for min/max on `Region3`, but they
+            -- do on Region3int16.. Anyway, we CAN calculate the min/max of a Region3 from just .CFrame
+            -- and .Size.. Thanks to wally for linking me the thread for this method lol
+            TypeCases["Region3"] = function(value)
+                local ValueCFrame = value.CFrame
+                local ValueSize = value.Size
+
+                -- These both are returned CFrames, we need to use Minimum.P/Maximum.P for the min/max args
+                -- to Region3.new()
+                local Minimum = ValueCFrame * CFrame.new(-ValueSize.X / 2, -ValueSize.Y / 2, -ValueSize.Z / 2)
+                local Maximum = ValueCFrame * CFrame.new(ValueSize.X / 2, ValueSize.Y / 2, ValueSize.Z / 2)
+
+                return string.format(
+                    "Region3.new(%s)",
+                    table.concat(
+                        {
+                            Minimum.p, -- min
+                            Maximum.p -- max
+                        },
+                        ValueSeperator
+                    )
+                ), true
             end
 
             -- Region3int16.new()
