@@ -227,9 +227,9 @@ local function LuaEncode(inputTable, options)
                     return ErrorOrValue, true
                 else
                     local Padding = "" do
-                        string.gsub(ErrorOrValue, "%](=*)%]", function(match)
+                        ErrorOrValue:gsub("%](=*)%]", function(match)
                             Padding = Padding .. match .. "="
-                        end)    
+                        end)
                     end
 
                     return string.format(
