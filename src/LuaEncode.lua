@@ -4,7 +4,7 @@
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
 --[[
-<string> LuaEncode(<table> tbl, <table?> options):
+<string> LuaEncode(<table> inputTable, <table?> options):
 
     ---------- SETTINGS: ----------
 
@@ -17,7 +17,7 @@ local Type = typeof or type -- For custom Roblox engine data-type support via `t
     value to place in the output as the key/value.
 
 ]]
-local function LuaEncode(tbl, options)
+local function LuaEncode(inputTable, options)
     -- Set default values if missing
     options = options or {}
     local PrettyPrinting = options.PrettyPrinting or false
@@ -37,7 +37,7 @@ local function LuaEncode(tbl, options)
     -- Setup output
     local Output = "{"
     local KeyIndex = 1
-    for Key, Value in next, tbl do
+    for Key, Value in next, inputTable do
         -- Cases (C-Like) for encoding values, then end setup. Using cases so no elseif bs!
         -- Functions are all expected to return a (<string> EncodedKey, <boolean?> EncloseInBrackets)
         local TypeCases = {} do
@@ -528,7 +528,7 @@ local function LuaEncode(tbl, options)
             Output = Output .. EncodedValue
 
             -- If there's another value after the current index, add a ","!
-            if next(tbl, Key) then
+            if next(inputTable, Key) then
                 Output = Output .. ","
             else
                 -- Ending string w indent and all

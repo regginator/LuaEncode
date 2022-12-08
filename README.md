@@ -21,14 +21,14 @@ ___
 - ### Rojo/Wally
     If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can just clone the repository use those tools to build the module just how you would with anything else.
 
-    - Rojo
-        ```sh
-        rojo build default.project.json -o LuaEncode.rbxm
-        ```
-    - In Your Project Deps w/ Wally
+    - In your project dependencies w/ Wally:
         ```toml
         [dependencies]
         LuaEncode = "regginator/luaencode@0.2.0"
+        ```
+    - Rojo: (Building manually)
+        ```sh
+        rojo build default.project.json -o LuaEncode.rbxm
         ```
 - ### Git Submodule
     If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
@@ -94,7 +94,7 @@ ___
 
 ## API
 ```lua
-<string> LuaEncode(<table> tbl, <table?> options)
+<string> LuaEncode(<table> inputTable, <table?> options)
 ```
 
 #### Options:
