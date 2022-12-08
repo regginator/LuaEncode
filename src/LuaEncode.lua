@@ -128,23 +128,17 @@ local function LuaEncode(inputTable, options)
 
             -- Axes.new()
             TypeCases["Axes"] = function(value)
-                local EncodedArgs = {}
-                local EnumRepresentations = {
-                    [value.X] = "Enum.Axis.X",
-                    [value.Y] = "Enum.Axis.Y",
-                    [value.Z] = "Enum.Axis.Z",
-                }
-
-                for IsEnabled, EnumRepresentation in next, EnumRepresentations do
-                    if IsEnabled == true then
-                        -- Add enum representation to EncodedArgs
-                        table.insert(EncodedArgs, EnumRepresentation)
-                    end
-                end
-
                 return string.format(
                     "Axes.new(%s)",
-                    table.concat(EncodedArgs, ValueSeperator)
+                    table.concat(
+                        {
+                            -- This is better than manually looping through enum representations, haha
+                            (value.X and "Enum.Axis.X") or nil,
+                            (value.Y and "Enum.Axis.Y") or nil,
+                            (value.Z and "Enum.Axis.Z") or nil,
+                        },
+                        ValueSeperator
+                    )
                 ), true
             end
 
