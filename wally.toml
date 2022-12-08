@@ -1,7 +1,7 @@
 [package]
 name = "regginator/luaencode"
 description = "Utility Module for Optimal Serialization of Lua Tables in Luau/Lua 5.1+ "
-version = "0.3.0"
+version = "0.3.1"
 license = "MIT"
 authors = ["Reggie <reggie@latte.to>"]
 realm = "shared"

@@ -1,6 +1,6 @@
 [package]
 name = "regginator/LuaEncode"
-version = "0.3.0"
+version = "0.3.1"
 author = "regginator"
 content_root = "src/LuaEncode.lua"
 license = "MIT"

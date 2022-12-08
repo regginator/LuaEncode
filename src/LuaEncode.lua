@@ -226,7 +226,10 @@ local function LuaEncode(inputTable, options)
                 if Success then
                     return ErrorOrValue, true
                 else
-                    return string.format("DockWidgetPluginGuiInfo.new() -- Error on serialization: %q", ErrorOrValue)
+                    return string.format(
+                        "DockWidgetPluginGuiInfo.new(--[[Error on serialization: %q]])",
+                        string.gsub(ErrorOrValue, "%[*%]*", "") -- Removes all "[" or "]" characters from err string, just for escaping purposes
+                    ), true
                 end
             end
 
