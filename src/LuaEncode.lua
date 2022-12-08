@@ -117,7 +117,7 @@ local function LuaEncode(inputTable, options)
                 -- a raw value to add as the key, you may want to do this for custom userdata or function
                 -- closures. Thank's for listening to my Ted Talk!
                 if FunctionsReturnRaw then
-                    return tostring(value()), true
+                    return value(), true
                 end
 
                 -- If all else, force key func to return nil; can't handle a func val..
