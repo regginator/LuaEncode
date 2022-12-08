@@ -291,6 +291,8 @@ local function LuaEncode(inputTable, options)
 
             -- Instance.new() | For now "partially" implemented, will add options for path get in the future
             TypeCases["Instance"] = function(value)
+                -- TODO: Add flag (false by default) named "InstancesReturnPaths" for treating Instance refs as
+                -- their Lua-accessable paths. (e.g `workspace:FindFirstChild("Part")` instead of `Instance.new("Part")`)
                 return string.format("Instance.new(%q)", value.ClassName), true
             end
 
