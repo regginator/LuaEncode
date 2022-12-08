@@ -18,6 +18,18 @@ local Type = typeof or type -- For custom Roblox engine data-type support via `t
 
 ]]
 local function LuaEncode(inputTable, options)
+    -- Check inputTable type
+    assert(
+        Type(inputTable) == "table",
+        string.format("LuaEncode: Argument #1 (`inputTable`): `table` expected, got `%s`", Type(inputTable))
+    )
+
+    -- Check options type (if included)
+    assert(
+        not options or Type(options) == "table",
+        string.format("LuaEncode: Argument #2 (`options`, optional): `table` expected, got `%s`", Type(options))
+    )
+
     -- Set default values if missing
     options = options or {}
     local PrettyPrinting = options.PrettyPrinting or false
