@@ -429,8 +429,8 @@ local function LuaEncode(inputTable, options)
                     "Region3.new(%s)",
                     table.concat(
                         {
-                            Minimum.p, -- min
-                            Maximum.p -- max
+                            TypeCase("Vector3", Minimum.p), -- min
+                            TypeCase("Vector3", Maximum.p) -- max
                         },
                         ValueSeperator
                     )
