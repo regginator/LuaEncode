@@ -365,8 +365,7 @@ local function LuaEncode(inputTable, options)
                 ), true
             end
 
-            -- Random.new() | Roblox DOES NOT provide a property on `Random` DataTypes for getting the
-            -- original input seed _yet_, so we have to let it decide for itself @ runtime.
+            -- Random.new()
             TypeCases["Random"] = function()
                 return "Random.new()", true
             end
