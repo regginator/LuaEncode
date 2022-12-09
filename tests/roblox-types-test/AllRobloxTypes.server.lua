@@ -64,7 +64,7 @@ print(LuaEncode(Table, {
     IndentCount = 4,
 }))
 
---[[
+--[=[
 Output:
 
 {
@@ -79,7 +79,7 @@ Output:
     }),
     ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
     DateTime.fromUnixTimestamp(123456),
-    DockWidgetPluginGuiInfo.new() -- Error on serialization: "'InitialEnabled' is not a valid member of DockWidgetPluginGuiInfo",
+    DockWidgetPluginGuiInfo.new(--[[Error on serialization: "'InitialEnabled' is not a valid member of DockWidgetPluginGuiInfo"]]),
     Enum.UserInputType,
     Enum.UserInputType.Gyro,
     Enum,
@@ -110,4 +110,4 @@ Output:
     Vector3.new(1, 1, 0),
     Vector3int16.new(1, 1, 0)
 }
-]]
+]=]
