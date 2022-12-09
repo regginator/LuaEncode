@@ -1,5 +1,5 @@
 -- LuaEncode - Utility Module for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
--- https://github.com/regginator/LuaEnocde | reggie 8=D
+-- https://github.com/regginator/LuaEnocde | reggie <3
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
