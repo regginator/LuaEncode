@@ -159,16 +159,12 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["number"] = function(value, isKey)
-            if isKey then
-                local CurrentKeyIndex = KeyIndex
-                KeyIndex = value + 1 -- Set it to the actual key idx now
-
-                -- If the number isn't the current real index of the table, we DO want to
-                -- explicitly define it in the serialization no matter what for accuracy
-                if value == CurrentKeyIndex then
-                    -- ^^ What's EXPECTED unless otherwise explicitly defined, if so, return no encoded num
-                    return nil
-                end
+            -- If the number isn't the current real index of the table, we DO want to
+            -- explicitly define it in the serialization no matter what for accuracy
+            if isKey and value == KeyIndex then
+                -- ^^ What's EXPECTED unless otherwise explicitly defined, if so, return no encoded num
+                KeyIndex = KeyIndex + 1
+                return nil
             end
 
             return tostring(value), true -- True return for 2nd arg means it SHOULD be enclosed with brackets, if it is a key
