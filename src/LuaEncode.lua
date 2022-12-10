@@ -18,6 +18,7 @@ local function CheckType(inputData, dataName, ...)
         ), 0)
     end
 
+
     return inputData -- Return back input directly
 end
 
@@ -36,10 +37,7 @@ end
 -- `warn` is Roblox only, for Lua 5.1+ or Luau we need to do it ourselves or whatever
 local Warn = warn or function(...)
     local Args = {...}
-
-    Args[1] = Args[1] or "" -- If there isn't already an arg
-    Args[1] = "WARNING: " .. Args[1]
-
+    Args[1] = "WARNING: " .. (Args[1] or "")
     print(table.unpack(Args))
 end
 
