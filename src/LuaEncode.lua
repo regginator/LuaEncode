@@ -54,7 +54,7 @@ end
     FunctionsReturnRaw <bool?:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value.
 
-    StackLimit <number?:300> | The limit to the stack level before recursive encoding
+    StackLimit <number?:199> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
     cyclic references. You could use `math.huge` here if you really wanted.
 
