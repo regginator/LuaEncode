@@ -49,7 +49,7 @@ local function LuaEncode(inputTable, options)
 
     -- Stack overflow/output abuse or whatever
     if StackLevel >= 300 then
-        return "{}"
+        return string.format("{--[[LuaEncode: Stack level limit of `300` reached]]}")
     end
 
     -- Easy-to-reference values for specific args
