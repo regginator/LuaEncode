@@ -74,37 +74,40 @@ local function LuaEncode(inputTable, options)
     local EndingString = (#IndentString > 0 and string.sub(IndentString, 1, -IndentCount - 1)) or ""
 
     -- We need to keep track of all visited table refs to avoid stack overflow issues and such
-    local VistedTables = (DetectCyclics and {}) or nil
-    local function HasCyclics(inputTable)
-        if VistedTables[inputTable] then
-            return true
-        end
+    local HasCyclics do
+        local VistedTables = (DetectCyclics and {}) or nil
 
-        -- Mark inputTable as visited now
-        VistedTables[inputTable] = true
-
-        local CyclicTables = {}
-
-        -- Check any values of inputTable for cyclic references
-        for _, Value in next, inputTable do
-            if Type(Value) == "table" and HasCyclics(inputTable) then
-                table.insert(CyclicTables, Value)
+        function HasCyclics(inputTable)
+            if VistedTables[inputTable] then
+                return true
             end
-        end
 
-        --[[
-        -- Check metatable (if it has one associated with it)
-        local inputMetatable = getmetatable(inputTable)
-        if inputMetatable and HasCyclics(inputMetatable) then
-            return true
-        end
-        ]]
+            -- Mark inputTable as visited now
+            VistedTables[inputTable] = true
 
-        if #CyclicTables > 0 then
-            return true, CyclicTables
-        end
+            local CyclicTables = {}
 
-        return false, CyclicTables
+            -- Check any values of inputTable for cyclic references
+            for _, Value in next, inputTable do
+                if Type(Value) == "table" and HasCyclics(inputTable) then
+                    table.insert(CyclicTables, Value)
+                end
+            end
+
+            --[[
+            -- Check metatable (if it has one associated with it)
+            local inputMetatable = getmetatable(inputTable)
+            if inputMetatable and HasCyclics(inputMetatable) then
+                return true
+            end
+            ]]
+
+            if #CyclicTables > 0 then
+                return true, CyclicTables
+            end
+
+            return false, CyclicTables
+        end
     end
 
     -- Setup output
@@ -188,14 +191,14 @@ local function LuaEncode(inputTable, options)
 
         TypeCases["function"] = function(value)
             -- If `FunctionsReturnRaw` is set as true, we'll call the function here itself, expecting
-            -- a raw value to add as the key/value, you may want to do this for custom userdata or
+            -- a raw value tFunctionsReturnRawo add as the key/value, you may want to do this for custom userdata or
             -- function closures. Thank's for listening to my Ted Talk!
             if FunctionsReturnRaw then
                 return value(), true
             end
 
             -- If all else, force key func to return nil; can't handle a func val..
-            return "function() return end", true
+            return "function() --[[LuaEncode: `options.FunctionsReturnRaw` false, can't encode functions]] return end", true
         end
 
         ---------- ROBLOX CUSTOM DATATYPES BELOW ----------
@@ -238,16 +241,22 @@ local function LuaEncode(inputTable, options)
         -- CatalogSearchParams.new()
         TypeCases["CatalogSearchParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(CatalogSearchParams.new(), %s)",
-                TypeCase("table", {
-                    SearchKeyword = value.SearchKeyword,
-                    MinPrice = value.MinPrice,
-                    MaxPrice = value.MaxPrice,
-                    SortType = value.SortType, -- EnumItem
-                    CategoryFilter = value.CategoryFilter, -- EnumItem
-                    BundleTypes = value.BundleTypes, -- table
-                    AssetTypes = value.AssetTypes -- table
-                })
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
+                table.concat(
+                    {
+                        "CatalogSearchParams.new()",
+                        TypeCase("table", {
+                            SearchKeyword = value.SearchKeyword,
+                            MinPrice = value.MinPrice,
+                            MaxPrice = value.MaxPrice,
+                            SortType = value.SortType, -- EnumItem
+                            CategoryFilter = value.CategoryFilter, -- EnumItem
+                            BundleTypes = value.BundleTypes, -- table
+                            AssetTypes = value.AssetTypes -- table
+                        })
+                    },
+                    ValueSeperator
+                )
             )
         end
 
@@ -438,14 +447,20 @@ local function LuaEncode(inputTable, options)
         -- OverlapParams.new()
         TypeCases["OverlapParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(OverlapParams.new(), %s)",
-                TypeCase("table", {
-                    FilterDescendantsInstances = value.FilterDescendantsInstances,
-                    FilterType = value.FilterType,
-                    MaxParts = value.MaxParts,
-                    CollisionGroup = value.CollisionGroup,
-                    RespectCanCollide = value.RespectCanCollide
-                })
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
+                table.concat(
+                    {
+                        "OverlapParams.new()",
+                        TypeCase("table", {
+                            FilterDescendantsInstances = value.FilterDescendantsInstances,
+                            FilterType = value.FilterType,
+                            MaxParts = value.MaxParts,
+                            CollisionGroup = value.CollisionGroup,
+                            RespectCanCollide = value.RespectCanCollide
+                        })
+                    },
+                    ValueSeperator
+                )
             )
         end
 
@@ -503,14 +518,20 @@ local function LuaEncode(inputTable, options)
         -- RaycastParams.new()
         TypeCases["RaycastParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(RaycastParams.new(), %s)",
-                TypeCase("table", {
-                    FilterDescendantsInstances = value.FilterDescendantsInstances,
-                    FilterType = value.FilterType,
-                    IgnoreWater = value.IgnoreWater,
-                    CollisionGroup = value.CollisionGroup,
-                    RespectCanCollide = value.RespectCanCollide
-                })
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
+                table.concat(
+                    {
+                        "RaycastParams.new()",
+                        TypeCase("table", {
+                            FilterDescendantsInstances = value.FilterDescendantsInstances,
+                            FilterType = value.FilterType,
+                            IgnoreWater = value.IgnoreWater,
+                            CollisionGroup = value.CollisionGroup,
+                            RespectCanCollide = value.RespectCanCollide
+                        })
+                    },
+                    ValueSeperator
+                )
             )
         end
 
