@@ -5,6 +5,3 @@
 
 # No need for wally.lock, LuaEncode doesn't need any 3rd party modules
 /wally.lock
-
-# No need for sourcemap
-/sourcemap.json

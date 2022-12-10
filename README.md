@@ -7,18 +7,20 @@ ___
 This is a simple utility function developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data structures. This script natively supports both Luau, and Lua 5.1+.
 
 ### Features:
-- Full serialization and output of basic types `number`, `string`, `table`, and `boolean` for keys/values.
-- Flexible and friendly API.
-- "Pretty Printing" & custom indentation configuration.
-- Optional `typeof()` support for **full** custom Roblox DataType support (i.e `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
-- Raw keys/values with `FunctionsReturnRaw`.
+* Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
+* Flexible and user-friendly API.
+* Pretty-printing & custom indentation configuration.
+* `type()` **and** `typeof()` support for *full* custom Roblox DataType support (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
+* Secure iteration and value reading, so you can also use this with something like user-generated input and "RemoteSpy" scripts.
+* **Built in** cyclic detection and stack limits, [both optional flags](#api).
+* Raw keys/values with `FunctionsReturnRaw`.
 
 ___
 
 ## Installation
-- ### GitHub Releases
+* ### GitHub Releases
     You can download the [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and immediately use the module!
-- ### Rojo/Wally
+* ### Rojo/Wally
     If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can just clone the repository use those tools to build the module just how you would with anything else.
 
     - In your project dependencies w/ Wally:
@@ -30,9 +32,9 @@ ___
         ```sh
         rojo build default.project.json -o LuaEncode.rbxm
         ```
-- ### Git Submodule
+* ### Git Submodule
     If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
-- ### Loadstring by Release URL
+* ### Loadstring by Release URL
     If you're using a script utility with direct access to `loadstring()`, you can use the following line to import the module into your project:
     ```lua
     local LuaEncode = loadstring(game:HttpGet("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
@@ -42,7 +44,6 @@ ___
     local HttpService = game:GetService("HttpService")
     local LuaEncode = loadstring(HttpService:GetAsync("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
     ```
-
 
 ___
 
@@ -109,6 +110,8 @@ ___
 ___
 
 ## Custom Roblox Lua DataType Coverage
+*(See [AllRobloxTypes.server.lua](tests/roblox-types-test/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
+
 ✔ Implemented | ➖ Partially Implemented | ❌ Unimplemented | ⛔ Never
 
 | DataType                                                                                                      | Serialized As                                     | Implemented |
@@ -158,6 +161,7 @@ ___
 ___
 
 ## License
+```
 MIT License
 
 Copyright (c) 2022 Reggie <reggie@latte.to>
@@ -179,3 +183,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
