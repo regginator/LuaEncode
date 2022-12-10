@@ -87,7 +87,7 @@ Output:
     }),
     ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
     DateTime.fromUnixTimestamp(123456),
-    DockWidgetPluginGuiInfo.new(--[[Error on serialization: "'InitialEnabled' is not a valid member of DockWidgetPluginGuiInfo"]]),
+    --[[LuaEncode: Failed to encode value of DataType `DockWidgetPluginGuiInfo`: "'InitialEnabled' is not a valid member of DockWidgetPluginGuiInfo"]]
     Enum.UserInputType,
     Enum.UserInputType.Gyro,
     Enum,

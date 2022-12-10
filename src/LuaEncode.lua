@@ -21,6 +21,28 @@ local function CheckType(inputData, dataName, ...)
     return inputData -- Return back input directly
 end
 
+-- Shallow clone function defaulting to `table.clone()` (only Luau), or manually
+-- doing so for Lua 5.1+
+local ShallowClone = table.clone or function(inputTable)
+    local ClonedTable = {}
+
+    for Key, Value in next, inputTable do
+        ClonedTable[Key] = Value
+    end
+
+    return ClonedTable
+end
+
+-- `warn` is Roblox only, for Lua 5.1+ or Luau we need to do it ourselves or whatever
+local Warn = warn or function(...)
+    local Args = {...}
+
+    Args[1] = Args[1] or "" -- If there isn't already an arg
+    Args[1] = "WARNING: " .. Args[1]
+
+    print(table.unpack(Args))
+end
+
 --[[
 <string> LuaEncode(<table> inputTable, <table?> options):
 
@@ -44,21 +66,33 @@ end
 ]]
 local function LuaEncode(inputTable, options)
     CheckType(inputTable, "inputTable", "table") -- Check inputTable type
-    CheckType(options, "options", "table", "nil") -- Check options type (if included, can be nil)
 
     -- Set default values if missing (fyi, `nil` accepted in CheckType is intentional,
     -- lets us handle directly IF whatever value is actually nil)
     options = CheckType(options, "options", "table", "nil") or {}
-    local PrettyPrinting = CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil") or false
-    local IndentCount = CheckType(options.IndentCount, "options.IndentCount", "number", "nil") or 0
-    local FunctionsReturnRaw = CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil") or false
-    local StackLimit = CheckType(options.StackLimit, "options.StackLimit", "number", "nil") or 300
-    local DetectCyclics = CheckType(options.DetectCyclicReferences, "DetectCyclicReferences", "boolean", "nil") or true
-    local StackLevel = CheckType(options._StackLevel, "options._StackLevel", "number", "nil") or 1
+
+    -- Check option args types
+    do
+        CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil")
+        CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
+        CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
+        CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
+        CheckType(options.DetectCyclics, "options.DetectCyclics", "boolean", "nil")
+        CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
+    end
+
+    -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
+    -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
+    local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting -- boolean
+    local IndentCount = options.IndentCount or 0 -- number
+    local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw -- boolean
+    local StackLimit = options.StackLimit or 199
+    local DetectCyclics = (options.DetectCyclics == nil and true) or options.DetectCyclics
+    local StackLevel = options._StackLevel or 1
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 300
     -- FYI, this is just a very temporary solution for table cyclic refs
-    if StackLevel > StackLimit then
+    if StackLevel >= StackLimit then
         return string.format("{--[[LuaEncode: Stack level limit of `%d` reached]]}", StackLimit)
     end
 
@@ -69,15 +103,15 @@ local function LuaEncode(inputTable, options)
     -- For pretty printing (which is optional, and false by default) we need to keep track
     -- of the current stack, then repeat InitialIndentString by that count
     local InitialIndentString = string.rep(" ", IndentCount) -- If 0 this will just be ""
-    local IndentString = (PrettyPrinting and string.rep(InitialIndentString, StackLevel)) or InitialIndentString
+    local IndentString = (PrettyPrinting and InitialIndentString:rep(StackLevel)) or InitialIndentString
 
-    local EndingString = (#IndentString > 0 and string.sub(IndentString, 1, -IndentCount - 1)) or ""
+    local EndingString = (#IndentString > 0 and IndentString:sub(1, -IndentCount - 1)) or ""
 
     -- We need to keep track of all visited table refs to avoid stack overflow issues and such
     local HasCyclics do
         local VistedTables = (DetectCyclics and {}) or nil
 
-        function HasCyclics(inputTable)
+        HasCyclics = (not DetectCyclics and nil) or function(inputTable)
             if VistedTables[inputTable] then
                 return true
             end
@@ -141,7 +175,7 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["string"] = function(value, isKey)
-            if isKey and string.match(value, "^[A-Za-z_][A-Za-z0-9_]*$") then
+            if isKey and value:match("^[A-Za-z_][A-Za-z0-9_]*$") then
                 -- ^^ Then it's a syntaxically-correct variable, doesn't need explicit string def
                 return value, false -- `EncloseInBrackets` false because ^^^
             end
@@ -151,7 +185,7 @@ local function LuaEncode(inputTable, options)
 
         TypeCases["table"] = function(value, isKey)
             -- Shallow clone original table value if DetectCyclics is true
-            local NewValue = (DetectCyclics and table.clone(value)) or value
+            local NewValue = (DetectCyclics and ShallowClone(value)) or value
  
             if DetectCyclics then
                 local HasCyclics, CyclicList = HasCyclics(value)
@@ -160,13 +194,11 @@ local function LuaEncode(inputTable, options)
                     for _, Cyclic in next, CyclicList do
                         table.remove(NewValue, table.find(NewValue, Cyclic)) -- Should be safe to call directly, if it isn't it's my fault
                     end
-
-                    -- Now that all possible cyclics are removed
                 end
             end
 
             -- Shallow clone original options tbl
-            local NewOptions = table.clone(options) do
+            local NewOptions = ShallowClone(options) do
                 -- Overriding if key because it'd look worse pretty printed in a key
                 NewOptions.PrettyPrinting = (isKey and false) or (not isKey and PrettyPrinting)
 
@@ -299,42 +331,21 @@ local function LuaEncode(inputTable, options)
         -- DockWidgetPluginGuiInfo.new() | Properties seem to throw an error on index if the scope isn't a Studio
         -- plugin, so we're wrapping everything in a pcall JIC.
         TypeCases["DockWidgetPluginGuiInfo"] = function(value)
-            local Success, ErrorOrValue = pcall(function()
-                return string.format(
-                    "DockWidgetPluginGuiInfo.new(%s)",
-                    table.concat(
-                        {
-                            "Enum.InitialDockState.Float", -- Have to override whatever it'd actually be.. api doesn't provide this..?
-                            value.InitialEnabled,
-                            value.InitialEnabledShouldOverrideRestore,
-                            value.FloatingXSize,
-                            value.FloatingYSize,
-                            value.MinWidth,
-                            value.MinHeight
-                        },
-                        ValueSeperator
-                    )
+            return string.format(
+                "DockWidgetPluginGuiInfo.new(%s)",
+                table.concat(
+                    {
+                        "Enum.InitialDockState.Float", -- Have to override whatever it'd actually be.. api doesn't provide this..?
+                        value.InitialEnabled,
+                        value.InitialEnabledShouldOverrideRestore,
+                        value.FloatingXSize,
+                        value.FloatingYSize,
+                        value.MinWidth,
+                        value.MinHeight
+                    },
+                    ValueSeperator
                 )
-            end)
-
-            if Success then
-                return ErrorOrValue, true
-            else
-                local Padding = "" do
-                    ErrorOrValue:gsub("%](=*)%]", function(match)
-                        if match >= Padding then
-                            Padding = match .. "="
-                        end
-                    end)
-                end
-
-                return string.format(
-                    "DockWidgetPluginGuiInfo.new(--[%s[Error on serialization: %q]%s])",
-                    Padding,
-                    ErrorOrValue,
-                    Padding
-                ), true
-            end
+            ), true
         end
 
         -- Enum (e.g. `Enum.UserInputType`)
@@ -677,6 +688,15 @@ local function LuaEncode(inputTable, options)
                 table.concat({value.X, value.Y, value.Z}, ValueSeperator)
             ), true
         end
+
+        -- `userdata`, just encode directly
+        TypeCases["userdata"] = function(value)
+            if getmetatable(value) then -- Has mt
+                return "newproxy(true)", true
+            else
+                return "newproxy()", true -- newproxy() defaults to false (no mt)
+            end
+        end
     end
 
     for Key, Value in next, inputTable do
@@ -688,31 +708,71 @@ local function LuaEncode(inputTable, options)
                 Output = Output .. NewEntryString .. IndentString
             end
 
-            -- Go through and get key val
-            local EncodedKey, EncloseInBrackets = TypeCases[KeyType](Key, true) -- The `true` represents if it's a key or not, here it is
+            -- Because this is compatible with both Lua 5.1+ *AND* Luau, we can't really use
+            -- continue/continue(); so we need to keep track if the key was actually encoded,
+            -- because if it isn't, we can't define the value either
+            local KeyWasEncodedIntoOutput = false -- (For now)
 
+            -- Go through and get key val
+            local KeyEncodedSuccess, EncodedKeyOrError, EncloseInBrackets = pcall(TypeCases[KeyType], Key, true) -- The `true` represents if it's a key or not, here it is
+            
             -- If the key should be explicity added, if it's a number idx or something, this will be nil
-            if EncodedKey then
-                if EncloseInBrackets then
-                    Output = Output .. string.format("[%s]", EncodedKey)
-                else
-                    Output = Output .. EncodedKey
+            if KeyEncodedSuccess then -- Then `EncodedKeyOrError` is the encoded key
+                -- Keys don't always have to be encoded explicity, like if it's a number of the current key index!
+                if EncodedKeyOrError then
+                    if EncloseInBrackets then
+                        Output = Output .. string.format("[%s]", EncodedKeyOrError)
+                    else
+                        Output = Output .. EncodedKeyOrError
+                    end
+
+                    -- Set key equal to
+                    Output = Output .. ((PrettyPrinting and " = ") or "=")
                 end
 
-                -- Set key equal to
-                Output = Output .. ((PrettyPrinting and " = ") or "=")
+                KeyWasEncodedIntoOutput = true -- We need to keep track of this!
+            elseif not KeyEncodedSuccess and EncodedKeyOrError then  -- Then `EncodedKeyOrError` is the error msg
+                local ErrorMessage = string.format(
+                    "LuaEncode: Failed to encode key of DataType `%s`: %q",
+                    KeyType,
+                    EncodedKeyOrError
+                )
+
+                Warn(ErrorMessage) -- Give warning in output of the err aswell
+                Output = Output .. string.format(
+                    "--[[%s]]",
+                    ErrorMessage:gsub("%[*%]*", "")
+                )
             end
 
-            -- Ignoring 2nd arg (`EncloseInBrackets`) because this isn't the key
-            local EncodedValue = TypeCases[ValueType](Value, false) -- False because it's NOT the key, it's the value
-            Output = Output .. EncodedValue
+            -- No `continue` sob..
+            if KeyWasEncodedIntoOutput then
+                -- Ignoring 2nd arg (`EncloseInBrackets`) because this isn't the key
+                local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false) -- False because it's NOT the key, it's the value
+                
+                if ValueEncodedSuccess and EncodedValueOrError then
+                    Output = Output .. EncodedValueOrError
 
-            -- If there's another value after the current index, add a ","!
-            if next(inputTable, Key) then
-                Output = Output .. ","
-            else
-                -- Ending string w indent and all
-                Output = Output .. NewEntryString .. EndingString
+                    -- If there's another value after the current index, add a ","!
+                    if next(inputTable, Key) then
+                        Output = Output .. ","
+                    else
+                        -- Ending string w indent and all
+                        Output = Output .. NewEntryString .. EndingString
+                    end
+                elseif not ValueEncodedSuccess and EncodedValueOrError ~= nil then
+                    local ErrorMessage = string.format(
+                        "LuaEncode: Failed to encode value of DataType `%s`: %q",
+                        ValueType,
+                        EncodedValueOrError
+                    )
+
+                    Warn(ErrorMessage) -- Give warning in output of the err aswell
+                    Output = Output .. string.format(
+                        "--[[%s]]",
+                        ErrorMessage:gsub("%[*%]*", "")
+                    )
+                end
             end
         end
     end
