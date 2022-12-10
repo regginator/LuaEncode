@@ -42,10 +42,15 @@ local function LuaEncode(inputTable, options)
     -- Set default values if missing (fyi, `nil` accepted in CheckType is intentional,
     -- lets us handle directly IF whatever value is actually nil)
     options = CheckType(options, "options", "table", "nil") or {}
-    local PrettyPrinting = CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", nil) or false
+    local PrettyPrinting = CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil") or false
     local IndentCount = CheckType(options.IndentCount, "options.IndentCount", "number", "nil") or 0
     local FunctionsReturnRaw = CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil") or false
     local StackLevel = CheckType(options._StackLevel, "options._StackLevel", "number", "nil") or 1
+
+    -- Stack overflow/output abuse or whatever
+    if StackLevel >= 300 then
+        return "{}"
+    end
 
     -- Easy-to-reference values for specific args
     local NewEntryString = (PrettyPrinting and "\n") or ""
