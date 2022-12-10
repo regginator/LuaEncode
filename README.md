@@ -103,6 +103,7 @@ ___
 | PrettyPrinting     | `<bool?:false>`  | Whether or not the output should use "pretty printing". |
 | IndentCount        | `<number?:0>`    | The amount of "spaces" that should be indented per entry. |
 | FunctionsReturnRaw | `<bool?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
+| StackLevelLimit    | `<number?:300>`  | The limit to the stack level before recursive encoding cuts off, and stops execution. This is done by default to prevent stack overflow/basic cyclic references. You can use `math.huge` here, aswell. |
 
 ___
 
