@@ -3,6 +3,24 @@
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
+-- Simple "utility" function for directly checking the type on values, with their input, variable name,
+-- and desired type name(s) to check
+local function CheckType(inputData, dataName, ...)
+    local DesiredTypes = {...}
+    local InputDataType = Type(inputData)
+
+    if not table.find(DesiredTypes, InputDataType) then
+        error(string.format(
+            "LuaEncode: Incorrect type for `%s`: `%s` expected, got `%s`",
+            dataName,
+            table.concat(DesiredTypes, ", "), -- For if multiple types are accepted
+            InputDataType
+        ), 0)
+    end
+
+    return inputData -- Return back input directly
+end
+
 --[[
 <string> LuaEncode(<table> inputTable, <table?> options):
 
@@ -18,24 +36,16 @@ local Type = typeof or type -- For custom Roblox engine data-type support via `t
 
 ]]
 local function LuaEncode(inputTable, options)
-    -- Check inputTable type
-    assert(
-        Type(inputTable) == "table",
-        string.format("LuaEncode: Argument #1 (`inputTable`): `table` expected, got `%s`", Type(inputTable))
-    )
+    CheckType(inputTable, "inputTable", "table") -- Check inputTable type
+    CheckType(options, "options", "table", "nil") -- Check options type (if included, can be nil)
 
-    -- Check options type (if included)
-    assert(
-        not options or Type(options) == "table",
-        string.format("LuaEncode: Argument #2 (`options`, optional): `table` expected, got `%s`", Type(options))
-    )
-
-    -- Set default values if missing
-    options = options or {}
-    local PrettyPrinting = options.PrettyPrinting or false
-    local IndentCount = options.IndentCount or 0
-    local FunctionsReturnRaw = options.FunctionsReturnRaw or false
-    local StackLevel = options._StackLevel or 1
+    -- Set default values if missing (fyi, `nil` accepted in CheckType is intentional,
+    -- lets us handle directly IF whatever value is actually nil)
+    options = CheckType(options, "options", "table", "nil") or {}
+    local PrettyPrinting = CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", nil) or false
+    local IndentCount = CheckType(options.IndentCount, "options.IndentCount", "number", "nil") or 0
+    local FunctionsReturnRaw = CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil") or false
+    local StackLevel = CheckType(options._StackLevel, "options._StackLevel", "number", "nil") or 1
 
     -- Easy-to-reference values for specific args
     local NewEntryString = (PrettyPrinting and "\n") or ""
@@ -107,7 +117,7 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["boolean"] = function(value)
-            return (value == true and "true") or (value == false and "false"), true
+            return tostring(value), true
         end
 
         TypeCases["nil"] = function(value)
@@ -116,8 +126,8 @@ local function LuaEncode(inputTable, options)
 
         TypeCases["function"] = function(value)
             -- If `FunctionsReturnRaw` is set as true, we'll call the function here itself, expecting
-            -- a raw value to add as the key, you may want to do this for custom userdata or function
-            -- closures. Thank's for listening to my Ted Talk!
+            -- a raw value to add as the key/value, you may want to do this for custom userdata or
+            -- function closures. Thank's for listening to my Ted Talk!
             if FunctionsReturnRaw then
                 return value(), true
             end
