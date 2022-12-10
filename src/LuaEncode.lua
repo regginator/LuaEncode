@@ -445,17 +445,17 @@ local function LuaEncode(inputTable, options)
             local ValueCFrame = value.CFrame
             local ValueSize = value.Size
 
-            -- These both are returned CFrames, we need to use Minimum.P/Maximum.P for the min/max args
-            -- to Region3.new()
-            local Minimum = ValueCFrame * CFrame.new(-ValueSize.X / 2, -ValueSize.Y / 2, -ValueSize.Z / 2)
-            local Maximum = ValueCFrame * CFrame.new(ValueSize.X / 2, ValueSize.Y / 2, ValueSize.Z / 2)
+            -- These both are returned CFrames, we need to use Minimum.Position/Maximum.Position for the
+            -- min/max args to Region3.new()
+            local Minimum = ValueCFrame * CFrame.new(-ValueSize / 2)
+            local Maximum = ValueCFrame * CFrame.new(ValueSize / 2)
 
             return string.format(
                 "Region3.new(%s)",
                 table.concat(
                     {
-                        TypeCase("Vector3", Minimum.p), -- min
-                        TypeCase("Vector3", Maximum.p) -- max
+                        TypeCase("Vector3", Minimum.Position), -- min
+                        TypeCase("Vector3", Maximum.Position) -- max
                     },
                     ValueSeperator
                 )
