@@ -235,9 +235,20 @@ local function LuaEncode(inputTable, options)
             ), true
         end
 
-        -- CatalogSearchParams.new() | Doesn't support any further parameters by design
-        TypeCases["CatalogSearchParams"] = function()
-            return "CatalogSearchParams.new()"
+        -- CatalogSearchParams.new()
+        TypeCases["CatalogSearchParams"] = function(value)
+            return string.format(
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(CatalogSearchParams.new(), %s)",
+                TypeCase("table", {
+                    SearchKeyword = value.SearchKeyword,
+                    MinPrice = value.MinPrice,
+                    MaxPrice = value.MaxPrice,
+                    SortType = value.SortType, -- EnumItem
+                    CategoryFilter = value.CategoryFilter, -- EnumItem
+                    BundleTypes = value.BundleTypes, -- table
+                    AssetTypes = value.AssetTypes -- table
+                })
+            )
         end
 
         -- Color3.new()
@@ -424,10 +435,18 @@ local function LuaEncode(inputTable, options)
             ), true
         end
 
-        -- OverlapParams.new() | BY DESIGN, like CatalogSearchParams, doesn't support params in the
-        -- new() call!
-        TypeCases["OverlapParams"] = function()
-            return "OverlapParams.new()", true
+        -- OverlapParams.new()
+        TypeCases["OverlapParams"] = function(value)
+            return string.format(
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(OverlapParams.new(), %s)",
+                TypeCase("table", {
+                    FilterDescendantsInstances = value.FilterDescendantsInstances,
+                    FilterType = value.FilterType,
+                    MaxParts = value.MaxParts,
+                    CollisionGroup = value.CollisionGroup,
+                    RespectCanCollide = value.RespectCanCollide
+                })
+            )
         end
 
         -- PathWaypoint.new()
@@ -481,9 +500,18 @@ local function LuaEncode(inputTable, options)
             ), true
         end
 
-        -- RaycastParams.new() | Yet more non-specific params!
+        -- RaycastParams.new()
         TypeCases["RaycastParams"] = function(value)
-            return "RaycastParams.new()", true
+            return string.format(
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(RaycastParams.new(), %s)",
+                TypeCase("table", {
+                    FilterDescendantsInstances = value.FilterDescendantsInstances,
+                    FilterType = value.FilterType,
+                    IgnoreWater = value.IgnoreWater,
+                    CollisionGroup = value.CollisionGroup,
+                    RespectCanCollide = value.RespectCanCollide
+                })
+            )
         end
 
         -- Rect.new()

@@ -71,7 +71,15 @@ Output:
     Axes.new(Enum.Axis.X),
     BrickColor.new("Pastel Blue"),
     CFrame.new(12, 67, 90, 1, 0, 0, 0, 1, 0, 0, 0, 1),
-    CatalogSearchParams.new(),
+    (function(v, p) for pn, pv in next, p do v[pn] = pv end end)(CatalogSearchParams.new(), {
+        BundleTypes = {},
+        SortType = Enum.CatalogSortType.Relevance,
+        MaxPrice = 2147483647,
+        CategoryFilter = Enum.CatalogCategoryFilter.None,
+        MinPrice = 0,
+        AssetTypes = {},
+        SearchKeyword = ""
+    }),
     Color3.new(0.0941176488995552, 0.1764705926179886, 0.30980393290519714),
     ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
@@ -93,12 +101,24 @@ Output:
         NumberSequenceKeypoint.new(1, 1, 0)
     }),
     NumberSequenceKeypoint.new(0, 0, 0),
-    OverlapParams.new(),
+    (function(v, p) for pn, pv in next, p do v[pn] = pv end end)(OverlapParams.new(), {
+        MaxParts = 0,
+        CollisionGroup = "Default",
+        FilterDescendantsInstances = {},
+        RespectCanCollide = false,
+        FilterType = Enum.RaycastFilterType.Blacklist
+    }),
     PathWaypoint.new(Vector3.new(1, 1, 1), Enum.PathWaypointAction.Walk, ""),
     PhysicalProperties.new(1, 1, 1, 1, 1),
     Random.new(),
     Ray.new(Vector3.new(1, 1, 1), Vector3.new(2, 2, 2)),
-    RaycastParams.new(),
+    (function(v, p) for pn, pv in next, p do v[pn] = pv end end)(RaycastParams.new(), {
+        RespectCanCollide = false,
+        IgnoreWater = false,
+        CollisionGroup = "Default",
+        FilterDescendantsInstances = {},
+        FilterType = Enum.RaycastFilterType.Blacklist
+    }),
     Rect.new(Vector2.new(1, 1), Vector2.new(2, 2)),
     Region3.new(Vector3.new(1, 1, 1), Vector3.new(2, 2, 2)),
     Region3int16.new(Vector3int16.new(1, 1, 1), Vector3int16.new(1, 1, 1)),
