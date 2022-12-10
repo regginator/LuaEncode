@@ -35,8 +35,11 @@ end
     value to place in the output as the key/value.
 
     StackLevelLimit <number?:300> | The limit to the stack level before recursive encoding
-    cuts off, and stops execution. This is done by default to prevent stack overflow/basic
-    cyclic references. You can use `math.huge` here, aswell.
+    cuts off, and stops execution. This is used to prevent stack overflows and infinite
+    cyclic references. You could use `math.huge` here if you really wanted.
+
+    DetectCyclics <boolean?:true> | If cyclics (table references "in" themselves) should
+    actively be checked for, and prevented from recursively encoding.
 
 ]]
 local function LuaEncode(inputTable, options)
@@ -50,6 +53,7 @@ local function LuaEncode(inputTable, options)
     local IndentCount = CheckType(options.IndentCount, "options.IndentCount", "number", "nil") or 0
     local FunctionsReturnRaw = CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil") or false
     local StackLevelLimit = CheckType(options.StackLevelLimit, "options.StackLevelLimit", "number", "nil") or 300
+    local DetectCyclics = CheckType(options.DetectCyclicReferences, "DetectCyclicReferences", "boolean", "nil") or true
     local StackLevel = CheckType(options._StackLevel, "options._StackLevel", "number", "nil") or 1
 
     -- Stack overflow/output abuse or whatever, default StackLevelLimit is 300
@@ -68,6 +72,40 @@ local function LuaEncode(inputTable, options)
     local IndentString = (PrettyPrinting and string.rep(InitialIndentString, StackLevel)) or InitialIndentString
 
     local EndingString = (#IndentString > 0 and string.sub(IndentString, 1, -IndentCount - 1)) or ""
+
+    -- We need to keep track of all visited table refs to avoid stack overflow issues and such
+    local VistedTables = (DetectCyclics and {}) or nil
+    local function HasCyclics(inputTable)
+        if VistedTables[inputTable] then
+            return true
+        end
+
+        -- Mark inputTable as visited now
+        VistedTables[inputTable] = true
+
+        local CyclicTables = {}
+
+        -- Check any values of inputTable for cyclic references
+        for _, Value in next, inputTable do
+            if Type(Value) == "table" and HasCyclics(inputTable) then
+                table.insert(CyclicTables, Value)
+            end
+        end
+
+        --[[
+        -- Check metatable (if it has one associated with it)
+        local inputMetatable = getmetatable(inputTable)
+        if inputMetatable and HasCyclics(inputMetatable) then
+            return true
+        end
+        ]]
+
+        if #CyclicTables > 0 then
+            return true, CyclicTables
+        end
+
+        return false, CyclicTables
+    end
 
     -- Setup output
     local Output = "{"
@@ -109,22 +147,35 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["table"] = function(value, isKey)
-            -- Overriding if key because it'd look worse pretty printed in a key
-            local NewPrettyPrinting = (isKey and false) or (not isKey and PrettyPrinting)
+            -- Shallow clone original table value if DetectCyclics is true
+            local NewValue = (DetectCyclics and table.clone(value)) or value
+ 
+            if DetectCyclics then
+                local HasCyclics, CyclicList = HasCyclics(value)
 
-            -- If PrettyPrinting is already false in the real args, set the indent to whatever
-            -- the REAL IndentCount is set to
-            local NewIndentCount = (isKey and ((not PrettyPrinting and IndentCount) or 1)) or IndentCount
+                if HasCyclics then
+                    for _, Cyclic in next, CyclicList do
+                        table.remove(NewValue, table.find(NewValue, Cyclic)) -- Should be safe to call directly, if it isn't it's my fault
+                    end
 
-            -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
-            local NewStackLevel = (isKey and 1) or StackLevel + 1
+                    -- Now that all possible cyclics are removed
+                end
+            end
 
-            return LuaEncode(value, {
-                PrettyPrinting = NewPrettyPrinting,
-                IndentCount = NewIndentCount,
-                FunctionsReturnRaw = FunctionsReturnRaw,
-                _StackLevel = NewStackLevel,
-            }), true
+            -- Shallow clone original options tbl
+            local NewOptions = table.clone(options) do
+                -- Overriding if key because it'd look worse pretty printed in a key
+                NewOptions.PrettyPrinting = (isKey and false) or (not isKey and PrettyPrinting)
+
+                -- If PrettyPrinting is already false in the real args, set the indent to whatever
+                -- the REAL IndentCount is set to
+                NewOptions.IndentCount = (isKey and ((not PrettyPrinting and IndentCount) or 1)) or IndentCount
+
+                -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
+                NewOptions._StackLevel = (isKey and 1) or StackLevel + 1
+            end
+
+            return LuaEncode(NewValue, NewOptions), true
         end
 
         TypeCases["boolean"] = function(value)
