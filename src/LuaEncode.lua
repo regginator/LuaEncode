@@ -556,6 +556,21 @@ local function LuaEncode(inputTable, options)
             ), true
         end
 
+        -- RotationCurveKey.new() | UNDOCUMENTED
+        TypeCases["RotationCurveKey"] = function(value)
+            return string.format(
+                "RotationCurveKey.new(%s)",
+                table.concat(
+                    {
+                        value.Time,
+                        TypeCase("CFrame", value.Value),
+                        TypeCase("EnumItem", value.Interpolation)
+                    },
+                    ValueSeperator
+                )
+            ), true
+        end
+
         -- UDim.new()
         TypeCases["UDim"] = function(value)
             return string.format(
