@@ -34,7 +34,7 @@ end
     FunctionsReturnRaw <bool?:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value.
 
-    StackLevelLimit <number?:300> | The limit to the stack level before recursive encoding
+    StackLimit <number?:300> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
     cyclic references. You could use `math.huge` here if you really wanted.
 
@@ -52,14 +52,14 @@ local function LuaEncode(inputTable, options)
     local PrettyPrinting = CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil") or false
     local IndentCount = CheckType(options.IndentCount, "options.IndentCount", "number", "nil") or 0
     local FunctionsReturnRaw = CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil") or false
-    local StackLevelLimit = CheckType(options.StackLevelLimit, "options.StackLevelLimit", "number", "nil") or 300
+    local StackLimit = CheckType(options.StackLimit, "options.StackLimit", "number", "nil") or 300
     local DetectCyclics = CheckType(options.DetectCyclicReferences, "DetectCyclicReferences", "boolean", "nil") or true
     local StackLevel = CheckType(options._StackLevel, "options._StackLevel", "number", "nil") or 1
 
-    -- Stack overflow/output abuse or whatever, default StackLevelLimit is 300
+    -- Stack overflow/output abuse or whatever, default StackLimit is 300
     -- FYI, this is just a very temporary solution for table cyclic refs
-    if StackLevel > StackLevelLimit then
-        return string.format("{--[[LuaEncode: Stack level limit of `%d` reached]]}", StackLevelLimit)
+    if StackLevel > StackLimit then
+        return string.format("{--[[LuaEncode: Stack level limit of `%d` reached]]}", StackLimit)
     end
 
     -- Easy-to-reference values for specific args
