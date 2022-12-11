@@ -111,7 +111,7 @@ ___
 ___
 
 ## Custom Roblox Lua DataType Coverage
-*(See [AllRobloxTypes.server.lua](tests/roblox-types-test/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
+*(See [AllRobloxTypes.server.lua](tests/AllRobloxTypes/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
 
 ✔ Implemented | ➖ Partially Implemented | ❌ Unimplemented | ⛔ Never
 
