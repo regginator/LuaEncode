@@ -3,13 +3,24 @@
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
+-- Lua 5.1 doesn't have table.find.
+local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring the `init` arg, unneeded for us
+    for Key, Value in next, inputTable do
+        if Value == valueToFind then
+            return Key -- Return the key idx
+        end
+    end
+
+    return
+end
+
 -- Simple "utility" function for directly checking the type on values, with their input, variable name,
 -- and desired type name(s) to check
 local function CheckType(inputData, dataName, ...)
     local DesiredTypes = {...}
     local InputDataType = Type(inputData)
 
-    if not table.find(DesiredTypes, InputDataType) then
+    if not FindInTable(DesiredTypes, InputDataType) then
         error(string.format(
             "LuaEncode: Incorrect type for `%s`: `%s` expected, got `%s`",
             dataName,
@@ -236,7 +247,7 @@ local function LuaEncode(inputTable, options)
 
                 if HasCyclics then
                     for _, Cyclic in next, CyclicList do
-                        table.remove(NewValue, table.find(NewValue, Cyclic)) -- Should be safe to call directly, if it isn't it's my fault
+                        table.remove(NewValue, FindInTable(NewValue, Cyclic)) -- Should be safe to call directly, if it isn't it's my fault
                     end
                 end
             end
