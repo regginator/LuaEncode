@@ -41,6 +41,49 @@ local Warn = warn or function(...)
     print(table.unpack(Args))
 end
 
+-- Evaluating an instances' accessable "path" with just it's ref, and if
+-- the root parent is nil/isn't under `game` or `workspace`, returns nil.
+-- The use of this in encoding is optional, (false by default for
+-- consistency) and will always fallback to `Instance.new(ClassName)`
+local function EvaluateInstancePath(object, currentPath)
+    if not object or Type(object) ~= "Instance" then
+        return
+    end
+
+    currentPath = currentPath or ""
+
+    -- Now, eval instance path directly
+    local ObjectName = object.Name
+    local ObjectParent = object.Parent
+
+    if ObjectParent == game then
+        -- ^^ We'll use GetService directly
+        -- FYI, GetService uses the ClassName
+        currentPath = string.format(":GetService(%q)", object.ClassName) .. currentPath
+    elseif ObjectName:match("^[A-Za-z_][A-Za-z0-9_]*$") then
+        -- ^^ Like the `string` DataType, this means means we can
+        -- index the name directly in Lua without an explicit string
+        currentPath = "." .. ObjectName .. currentPath
+    else
+        currentPath = string.format("[%q]", ObjectName) .. currentPath
+    end
+
+    -- These cases are SPECIFICALLY for getting if the path has reached the
+    -- "end" for the evaluation process, including if the root parent is nil
+    -- or isn't under the `game` DataModel
+    if not ObjectParent then
+        return -- Fallback, parent is nil etc
+    elseif ObjectParent == game then
+        currentPath = "game" .. currentPath
+        return currentPath
+    elseif ObjectParent == workspace then
+        currentPath = "workspace" .. currentPath
+        return currentPath
+    end
+
+    return EvaluateInstancePath(ObjectParent, currentPath)
+end
+
 --[[
 <string> LuaEncode(<table> inputTable, <table?> options):
 
@@ -58,8 +101,13 @@ end
     DetectCyclics <boolean?:true> | If cyclics (table references "in" themselves) should
     actively be checked for, and prevented from recursively encoding.
 
-    FunctionsReturnRaw <booleam?:false> | If functions in said table return back a "raw"
+    FunctionsReturnRaw <boolean?:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value.
+
+    UseInstancePaths <boolean?:false> | If `Instance` reference objects should attempt to
+    get its Lua-accessable path for encoding. If the instance is parented under `nil` or
+    isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as
+    before.
 
 ]]
 local function LuaEncode(inputTable, options)
@@ -76,16 +124,18 @@ local function LuaEncode(inputTable, options)
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
         CheckType(options.DetectCyclics, "options.DetectCyclics", "boolean", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
+        CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
     end
 
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
-    local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting -- boolean
-    local IndentCount = options.IndentCount or 0 -- number
+    local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting
+    local IndentCount = options.IndentCount or 0
     local StackLimit = options.StackLimit or 199
     local DetectCyclics = (options.DetectCyclics == nil and true) or options.DetectCyclics
-    local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw -- boolean
+    local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
+    local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
     local StackLevel = options._StackLevel or 1
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 300
@@ -417,10 +467,18 @@ local function LuaEncode(inputTable, options)
             ), true
         end
 
-        -- Instance.new() | For now "partially" implemented, will add options for path get in the future
+        -- Instance.new() | Instance refs can be evaluated to their paths (optional), but if
+        -- parented to nil or some DataModel not under `game`, it'll just return `Instance.new(ClassName)`
         TypeCases["Instance"] = function(value)
-            -- TODO: Add flag (false by default) named "InstancesReturnPaths" for treating Instance refs as
-            -- their Lua-accessable paths. (e.g `workspace:FindFirstChild("Part")` instead of `Instance.new("Part")`)
+            if UseInstancePaths then
+                local InstancePath = EvaluateInstancePath(value)
+                if InstancePath then
+                    return InstancePath, true
+                end
+
+                -- ^^ Now, if the path isn't accessable, falls back to the return below
+            end
+
             return string.format("Instance.new(%q)", value.ClassName), true
         end
 
