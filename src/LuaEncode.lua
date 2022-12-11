@@ -14,7 +14,7 @@ local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring 
     return
 end
 
--- Simple "utility" function for directly checking the type on values, with their input, variable name,
+-- Simple function for directly checking the type on values, with their input, variable name,
 -- and desired type name(s) to check
 local function CheckType(inputData, dataName, ...)
     local DesiredTypes = {...}
@@ -122,14 +122,12 @@ end
 
 ]]
 local function LuaEncode(inputTable, options)
-    CheckType(inputTable, "inputTable", "table") -- Check inputTable type
-
-    -- Set default values if missing (fyi, `nil` accepted in CheckType is intentional,
-    -- lets us handle directly IF whatever value is actually nil)
-    options = CheckType(options, "options", "table", "nil") or {}
-
-    -- Check option args types
+    -- Check all arg and option types
     do
+        -- Func args
+        CheckType(inputTable, "inputTable", "table") -- Required*, nil not allowed
+        CheckType(options, "options", "table", "nil") -- `options` is optional
+        -- Options
         CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil")
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
@@ -138,6 +136,8 @@ local function LuaEncode(inputTable, options)
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
     end
+
+    options = options or {}
 
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
@@ -149,7 +149,7 @@ local function LuaEncode(inputTable, options)
     local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
     local StackLevel = options._StackLevel or 1
 
-    -- Stack overflow/output abuse or whatever, default StackLimit is 300
+    -- Stack overflow/output abuse or whatever, default StackLimit is 199
     -- FYI, this is just a very temporary solution for table cyclic refs
     if StackLevel >= StackLimit then
         return string.format("{--[[LuaEncode: Stack level limit of `%d` reached]]}", StackLimit)
