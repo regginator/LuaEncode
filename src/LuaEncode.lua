@@ -46,13 +46,10 @@ end
 
     ---------- SETTINGS: ----------
 
-    PrettyPrinting <bool?:false> | Whether or not the output should use "pretty printing".
+    PrettyPrinting <boolean?:false> | Whether or not the output should use "pretty
+    printing".
 
-    IndentCount <number?:0> | The amount of "spaces" that should be indented
-    per entry.
-
-    FunctionsReturnRaw <bool?:false> | If functions in said table return back a "raw"
-    value to place in the output as the key/value.
+    IndentCount <number?:0> | The amount of "spaces" that should be indented per entry.
 
     StackLimit <number?:199> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
@@ -60,6 +57,9 @@ end
 
     DetectCyclics <boolean?:true> | If cyclics (table references "in" themselves) should
     actively be checked for, and prevented from recursively encoding.
+
+    FunctionsReturnRaw <booleam?:false> | If functions in said table return back a "raw"
+    value to place in the output as the key/value.
 
 ]]
 local function LuaEncode(inputTable, options)
@@ -73,9 +73,9 @@ local function LuaEncode(inputTable, options)
     do
         CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil")
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
-        CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
         CheckType(options.DetectCyclics, "options.DetectCyclics", "boolean", "nil")
+        CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
     end
 
@@ -83,9 +83,9 @@ local function LuaEncode(inputTable, options)
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
     local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting -- boolean
     local IndentCount = options.IndentCount or 0 -- number
-    local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw -- boolean
     local StackLimit = options.StackLimit or 199
     local DetectCyclics = (options.DetectCyclics == nil and true) or options.DetectCyclics
+    local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw -- boolean
     local StackLevel = options._StackLevel or 1
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 300
