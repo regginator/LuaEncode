@@ -3,9 +3,9 @@
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
--- Lua 5.1 doesn't have table.find.
+-- Lua 5.1 doesn't have table.find
 local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring the `init` arg, unneeded for us
-    for Key, Value in next, inputTable do
+    for Key, Value in ipairs(inputTable) do
         if Value == valueToFind then
             return Key -- Return the key idx
         end
