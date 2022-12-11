@@ -26,7 +26,7 @@ ___
     - In your project dependencies w/ Wally:
         ```toml
         [dependencies]
-        LuaEncode = "regginator/luaencode@0.3.2"
+        LuaEncode = "regginator/luaencode@1.0.0"
         ```
     - Rojo: (Building manually)
         ```sh
