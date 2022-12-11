@@ -323,19 +323,25 @@ local function LuaEncode(inputTable, options)
         end
 
         -- DockWidgetPluginGuiInfo.new() | Properties seem to throw an error on index if the scope isn't a Studio
-        -- plugin, so we're wrapping everything in a pcall JIC.
+        -- plugin, so we're directly getting values! (so fun!!!!)
         TypeCases["DockWidgetPluginGuiInfo"] = function(value)
+            local ValueString = tostring(value) -- e.g.: "InitialDockState:Right InitialEnabled:0 InitialEnabledShouldOverrideRestore:0 FloatingXSize:0 FloatingYSize:0 MinWidth:0 MinHeight:0"
+
             return string.format(
                 "DockWidgetPluginGuiInfo.new(%s)",
                 table.concat(
                     {
-                        "Enum.InitialDockState.Float", -- Have to override whatever it'd actually be.. api doesn't provide this..?
-                        value.InitialEnabled,
-                        value.InitialEnabledShouldOverrideRestore,
-                        value.FloatingXSize,
-                        value.FloatingYSize,
-                        value.MinWidth,
-                        value.MinHeight
+                        -- InitialDockState (Enum.InitialDockState)
+                        TypeCase("EnumItem", Enum.InitialDockState[ValueString:match("InitialDockState:(%w+)")]), -- Enum.InitialDockState.Right
+                        -- InitialEnabled and InitialEnabledShouldOverrideRestore (boolean as number; `0` or `1`)
+                        TypeCase("boolean", ValueString:match("InitialEnabled:(%w+)") == 1), -- false
+                        TypeCase("boolean", ValueString:match("InitialEnabledShouldOverrideRestore:(%w+)") == 1), -- false
+                        -- FloatingXSize/FloatingYSize (numbers)
+                        ValueString:match("FloatingXSize:(%w+)"), -- 0
+                        ValueString:match("FloatingYSize:(%w+)"), -- 0
+                        -- MinWidth/MinHeight (numbers)
+                        ValueString:match("MinWidth:(%w+)"), -- 0
+                        ValueString:match("MinHeight:(%w+)"), -- 0
                     },
                     ValueSeperator
                 )
