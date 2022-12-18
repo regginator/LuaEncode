@@ -1,5 +1,6 @@
--- LuaEncode - Utility Module for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
--- https://github.com/regginator/LuaEnocde | reggie <3
+-- LuaEncode - Optimal Serialization of Lua Tables in Native Luau/Lua 5.1+
+-- Copyright (c) 2022 Reggie <reggie@latte.to> | MIT License
+-- https://github.com/regginator/LuaEncode
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
@@ -52,25 +53,35 @@ local Warn = warn or function(...)
     print(table.unpack(Args))
 end
 
+-- VERY simple function to get if an object is a service, used in instance path
+-- eval because using pcall with declarative syntax is a pain; ah, tuples..
+local function IsService(object)
+    local FindServiceSuccess, ServiceObject = pcall(game.FindService, game, object.ClassName)
+
+    if FindServiceSuccess and ServiceObject then
+        return true
+    end
+
+    return false
+end
+
 -- Evaluating an instances' accessable "path" with just it's ref, and if
 -- the root parent is nil/isn't under `game` or `workspace`, returns nil.
 -- The use of this in encoding is optional, (false by default for
 -- consistency) and will always fallback to `Instance.new(ClassName)`
 local function EvaluateInstancePath(object, currentPath)
-    if not object or Type(object) ~= "Instance" then
-        return
-    end
-
     currentPath = currentPath or ""
 
-    -- Now, eval instance path directly
     local ObjectName = object.Name
+    local ObjectClassName = object.ClassName
     local ObjectParent = object.Parent
 
-    if ObjectParent == game then
-        -- ^^ We'll use GetService directly
-        -- FYI, GetService uses the ClassName
-        currentPath = string.format(":GetService(%q)", object.ClassName) .. currentPath
+    if ObjectParent == game and IsService(object) then
+        -- ^^ Then we'll use GetService directly, since it's actually a service
+        -- under the DataModel. FYI, GetService uses the ClassName of the
+        -- service, not the "name"
+
+        currentPath = string.format(":GetService(%q)", ObjectClassName) .. currentPath
     elseif ObjectName:match("^[A-Za-z_][A-Za-z0-9_]*$") then
         -- ^^ Like the `string` DataType, this means means we can
         -- index the name directly in Lua without an explicit string
@@ -123,11 +134,11 @@ end
 ]]
 local function LuaEncode(inputTable, options)
     -- Check all arg and option types
-    do
-        -- Func args
-        CheckType(inputTable, "inputTable", "table") -- Required*, nil not allowed
-        CheckType(options, "options", "table", "nil") -- `options` is optional
-        -- Options
+    CheckType(inputTable, "inputTable", "table") -- Required*, nil not allowed
+    options = CheckType(options, "options", "table", "nil") or {} -- `options` is an optional arg
+
+    -- Options
+    if options then
         CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil")
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
@@ -136,8 +147,6 @@ local function LuaEncode(inputTable, options)
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
     end
-
-    options = options or {}
 
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
@@ -178,28 +187,26 @@ local function LuaEncode(inputTable, options)
             -- Mark inputTable as visited now
             VistedTables[inputTable] = true
 
-            local CyclicTables = {}
+            local CyclicKeys = {}
 
             -- Check any values of inputTable for cyclic references
-            for _, Value in next, inputTable do
+            for Key, Value in next, inputTable do
                 if Type(Value) == "table" and HasCyclics(inputTable) then
-                    table.insert(CyclicTables, Value)
+                    table.insert(CyclicKeys, Key)
                 end
             end
 
-            --[[
             -- Check metatable (if it has one associated with it)
             local inputMetatable = getmetatable(inputTable)
             if inputMetatable and HasCyclics(inputMetatable) then
                 return true
             end
-            ]]
 
-            if #CyclicTables > 0 then
-                return true, CyclicTables
+            if #CyclicKeys > 0 then
+                return true, CyclicKeys
             end
 
-            return false, CyclicTables
+            return false, CyclicKeys
         end
     end
 
@@ -243,11 +250,11 @@ local function LuaEncode(inputTable, options)
             local NewValue = (DetectCyclics and ShallowClone(value)) or value
  
             if DetectCyclics then
-                local HasCyclics, CyclicList = HasCyclics(value)
+                local HasCyclics, CyclicKeys = HasCyclics(value)
 
                 if HasCyclics then
-                    for _, Cyclic in next, CyclicList do
-                        table.remove(NewValue, FindInTable(NewValue, Cyclic)) -- Should be safe to call directly, if it isn't it's my fault
+                    for _, CyclicKey in next, CyclicKeys do
+                        NewValue[CyclicKey] = nil
                     end
                 end
             end

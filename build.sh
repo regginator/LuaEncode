@@ -1,3 +1,5 @@
+#!/bin/sh
+
 rm -r -f ./build # If old `./build`, remove
 mkdir ./build
 cp ./LICENSE.txt ./build/LICENSE.txt

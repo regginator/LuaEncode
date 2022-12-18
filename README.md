@@ -1,10 +1,56 @@
-# LuaEncode
-Utility Function for Optimal Serialization of Lua Tables in Luau/Lua 5.1+
+<div align="center">
+    <!-- Title/Desc -->
+    <h1>LuaEncode</h1>
+    <h4>Optimal Serialization of Lua Tables in Native Luau/Lua 5.1+</h4>
+    <p>
+        <!-- PROJECT INFO START -->
+        <!-- Repo stars -->
+        <a href="https://github.com/regginator/LuaEncode/stargazers">
+            <img src="https://img.shields.io/github/stars/regginator/LuaEncode?label=Stars&logo=GitHub" alt="Repo Stars">
+        </a>
+        <!-- Repo forks -->
+        <a href="https://github.com/regginator/LuaEncode/fork">
+            <img src="https://img.shields.io/github/forks/regginator/LuaEncode?label=Fork&logo=GitHub" alt="Repo Forks">
+        </a>
+        <!-- Latest release -->
+        <a href="https://github.com/regginator/LuaEncode/releases/latest">
+            <img src="https://img.shields.io/github/v/release/regginator/LuaEncode?label=Latest%20Release" alt="Latest Release" />
+        </a>
+        <!-- License info -->
+        <a href="https://github.com/regginator/LuaEncode/blob/master/LICENSE.txt">
+            <img src="https://img.shields.io/github/license/regginator/LuaEncode?label=License" alt="License" />
+        </a>
+        <!-- Last modified (latest commit) -->
+        <a href="https://github.com/regginator/LuaEncode/commits">
+            <img src="https://img.shields.io/github/last-commit/regginator/LuaEncode?label=Last%20Modifed" alt="Last Modified" />
+        </a>
+        <!-- Package on wally.run -->
+        <a href="https://wally.run/package/regginator/luaencode">
+            <img src="https://img.shields.io/badge/wally.run-regginator%2Fluaencode-%23ad4646?style=flat" alt="Package on wally.run" />
+        </a>
+        <!-- PROJECT INFO END -->
+        <br />
+        <!-- SOCIAL LINKS START -->
+        <!-- Latte Softworks Discord -->
+        <a href="https://latte.to/invite">
+            <img src="https://img.shields.io/discord/892211155303538748?color=%235865F2&label=Latte%20Softworks&logo=Discord&logoColor=%23FFFFFF" alt="Latte Softworks Discord" />
+        </a>
+        <!-- Twitter (@jitlua) -->
+        <a href="https://twitter.com/jitlua">
+            <img src="https://img.shields.io/twitter/follow/jitlua?color=1d9bf0&label=Follow%20%40jitlua&logo=Twitter&logoColor=ffffff&style=flat" alt="Follow @jitlua (Twitter)" />
+        </a>
+        <!-- GitHub (@regginator) -->
+        <a href="https://github.com/regginator">
+            <img src="https://img.shields.io/github/followers/regginator?label=Follow%20%40regginator&logo=GitHub" alt="Follow @regginator (GitHub)" />
+        </a>
+        <!-- SOCIAL LINKS END -->
+    </p>
+</div>
 
 ___
 
-## About & Features
-This is a simple utility function developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data structures. This script natively supports both Luau, and Lua 5.1+.
+## About
+This is a fairly simple, user-friendly utility module developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data structures. This natively supports both Luau (Vanilla *or* [Roblox](https://roblox.com)), and Lua 5.1+
 
 ### Features:
 * Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
@@ -21,16 +67,15 @@ ___
 * ### GitHub Releases
     You can download the [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and immediately use the module!
 * ### Rojo/Wally
-    If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can just clone the repository use those tools to build the module just how you would with anything else.
+    If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import in your `Wally.toml` as a dependency:
 
-    - In your project dependencies w/ Wally:
+    - As a dependency in `Wally.toml`:
         ```toml
-        [dependencies]
-        LuaEncode = "regginator/luaencode@1.0.0"
+        LuaEncode = "regginator/luaencode@1.0.3"
         ```
     - Rojo: (Building manually)
         ```sh
-        rojo build default.project.json -o LuaEncode.rbxm
+        rojo build -o LuaEncode.rbxm
         ```
 * ### Git Submodule
     If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
