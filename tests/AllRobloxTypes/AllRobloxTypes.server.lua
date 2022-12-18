@@ -72,7 +72,7 @@ Output:
     Axes.new(Enum.Axis.X),
     BrickColor.new("Pastel Blue"),
     CFrame.new(12, 67, 90, 1, 0, 0, 0, 1, 0, 0, 0, 1),
-    (function(v, p) for pn, pv in next, p do v[pn] = pv end end)(CatalogSearchParams.new(), {
+    (function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(CatalogSearchParams.new(), {
         BundleTypes = {},
         SortType = Enum.CatalogSortType.Relevance,
         MaxPrice = 2147483647,
@@ -102,7 +102,7 @@ Output:
         NumberSequenceKeypoint.new(1, 1, 0)
     }),
     NumberSequenceKeypoint.new(0, 0, 0),
-    (function(v, p) for pn, pv in next, p do v[pn] = pv end end)(OverlapParams.new(), {
+    (function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(OverlapParams.new(), {
         MaxParts = 0,
         CollisionGroup = "Default",
         FilterDescendantsInstances = {},
@@ -113,7 +113,7 @@ Output:
     PhysicalProperties.new(1, 1, 1, 1, 1),
     Random.new(),
     Ray.new(Vector3.new(1, 1, 1), Vector3.new(2, 2, 2)),
-    (function(v, p) for pn, pv in next, p do v[pn] = pv end end)(RaycastParams.new(), {
+    (function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(RaycastParams.new(), {
         RespectCanCollide = false,
         IgnoreWater = false,
         CollisionGroup = "Default",

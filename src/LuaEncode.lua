@@ -297,7 +297,7 @@ local function LuaEncode(inputTable, options)
         -- CatalogSearchParams.new()
         TypeCases["CatalogSearchParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(%s)",
                 table.concat(
                     {
                         "CatalogSearchParams.new()",
@@ -496,7 +496,7 @@ local function LuaEncode(inputTable, options)
         -- OverlapParams.new()
         TypeCases["OverlapParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(%s)",
                 table.concat(
                     {
                         "OverlapParams.new()",
@@ -567,7 +567,7 @@ local function LuaEncode(inputTable, options)
         -- RaycastParams.new()
         TypeCases["RaycastParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(%s)",
                 table.concat(
                     {
                         "RaycastParams.new()",
