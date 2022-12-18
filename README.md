@@ -71,7 +71,7 @@ ___
 
     - As a dependency in `Wally.toml`:
         ```toml
-        LuaEncode = "regginator/luaencode@1.0.3"
+        LuaEncode = "regginator/luaencode@1.1.0"
         ```
     - Rojo: (Building manually)
         ```sh
@@ -148,6 +148,7 @@ ___
 |:-------------------|:--------------------|:------------------------------------|
 | PrettyPrinting     | `<boolean?:false>`  | Whether or not the output should use "pretty printing". |
 | IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. |
+| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be outputted to the console or output (as comments); It's recommended to keep this enabled. |
 | StackLimit         | `<number?:199>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflows and infinite cyclic references. You could use `math.huge` here if you really wanted. |
 | DetectCyclics      | `<boolean?:true>`   | If cyclics (table references "in" themselves) should actively be checked for, and prevented from recursively encoding. |
 | FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |

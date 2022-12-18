@@ -50,7 +50,7 @@ end
 local Warn = warn or function(...)
     local Args = {...}
     Args[1] = "WARNING: " .. (Args[1] or "")
-    print(table.unpack(Args))
+    print(unpack(Args))
 end
 
 -- VERY simple function to get if an object is a service, used in instance path
@@ -116,6 +116,9 @@ end
 
     IndentCount <number?:0> | The amount of "spaces" that should be indented per entry.
 
+    OutputWarnings <boolean?:true> | If "warnings" should be outputted to the console
+    or output (as comments); It's recommended to keep this enabled.
+
     StackLimit <number?:199> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
     cyclic references. You could use `math.huge` here if you really wanted.
@@ -141,6 +144,7 @@ local function LuaEncode(inputTable, options)
     if options then
         CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil")
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
+        CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
         CheckType(options.DetectCyclics, "options.DetectCyclics", "boolean", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
@@ -152,6 +156,7 @@ local function LuaEncode(inputTable, options)
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
     local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting
     local IndentCount = options.IndentCount or 0
+    local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
     local StackLimit = options.StackLimit or 199
     local DetectCyclics = (options.DetectCyclics == nil and true) or options.DetectCyclics
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
@@ -174,41 +179,6 @@ local function LuaEncode(inputTable, options)
     local IndentString = (PrettyPrinting and InitialIndentString:rep(StackLevel)) or InitialIndentString
 
     local EndingString = (#IndentString > 0 and IndentString:sub(1, -IndentCount - 1)) or ""
-
-    -- We need to keep track of all visited table refs to avoid stack overflow issues and such
-    local HasCyclics do
-        local VistedTables = (DetectCyclics and {}) or nil
-
-        HasCyclics = (not DetectCyclics and nil) or function(inputTable)
-            if VistedTables[inputTable] then
-                return true
-            end
-
-            -- Mark inputTable as visited now
-            VistedTables[inputTable] = true
-
-            local CyclicKeys = {}
-
-            -- Check any values of inputTable for cyclic references
-            for Key, Value in next, inputTable do
-                if Type(Value) == "table" and HasCyclics(inputTable) then
-                    table.insert(CyclicKeys, Key)
-                end
-            end
-
-            -- Check metatable (if it has one associated with it)
-            local inputMetatable = getmetatable(inputTable)
-            if inputMetatable and HasCyclics(inputMetatable) then
-                return true
-            end
-
-            if #CyclicKeys > 0 then
-                return true, CyclicKeys
-            end
-
-            return false, CyclicKeys
-        end
-    end
 
     -- Setup output
     local Output = "{"
@@ -246,17 +216,9 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["table"] = function(value, isKey)
-            -- Shallow clone original table value if DetectCyclics is true
-            local NewValue = (DetectCyclics and ShallowClone(value)) or value
- 
-            if DetectCyclics then
-                local HasCyclics, CyclicKeys = HasCyclics(value)
-
-                if HasCyclics then
-                    for _, CyclicKey in next, CyclicKeys do
-                        NewValue[CyclicKey] = nil
-                    end
-                end
+            -- Then it's a cyclic ref
+            if DetectCyclics and value == inputTable then
+                return "", true
             end
 
             -- Shallow clone original options tbl
@@ -272,7 +234,7 @@ local function LuaEncode(inputTable, options)
                 NewOptions._StackLevel = (isKey and 1) or StackLevel + 1
             end
 
-            return LuaEncode(NewValue, NewOptions), true
+            return LuaEncode(value, NewOptions), true
         end
 
         TypeCases["boolean"] = function(value)
@@ -778,40 +740,46 @@ local function LuaEncode(inputTable, options)
     for Key, Value in next, inputTable do
         local KeyType = Type(Key)
         local ValueType = Type(Value)
-
+            
         if TypeCases[KeyType] and TypeCases[ValueType] then
             if PrettyPrinting then
                 Output = Output .. NewEntryString .. IndentString
             end
 
-            -- Because this is compatible with both Lua 5.1+ *AND* Luau, we can't really use
-            -- continue/continue(); so we need to keep track if the key was actually encoded,
-            -- because if it isn't, we can't define the value either
-            local KeyWasEncodedIntoOutput = false -- (For now)
-
             -- Go through and get key val
             local KeyEncodedSuccess, EncodedKeyOrError, EncloseInBrackets = pcall(TypeCases[KeyType], Key, true) -- The `true` represents if it's a key or not, here it is
-            
-            -- If the key should be explicity added, if it's a number idx or something, this will be nil
-            if KeyEncodedSuccess then -- Then `EncodedKeyOrError` is the encoded key
-                -- Keys don't always have to be encoded explicity, like if it's a number of the current key index!
-                if EncodedKeyOrError then
-                    if EncloseInBrackets then
-                        Output = Output .. string.format("[%s]", EncodedKeyOrError)
-                    else
-                        Output = Output .. EncodedKeyOrError
-                    end
+            -- Ignoring 2nd arg (`EncloseInBrackets`) because this isn't the key
+            local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false) -- `false` because it's NOT the key, it's the value
 
-                    -- Set key equal to
-                    Output = Output .. ((PrettyPrinting and " = ") or "=")
+            -- Im sorry for this logic chain here, I can't use `continue`/`continue()`.. :sob:
+            -- Ignoring `if EncodedKeyOrError` because the key doesn't actually need to ALWAYS
+            -- be explicitly encoded, like if it's a number of the current key index!
+            if KeyEncodedSuccess and ValueEncodedSuccess and EncodedValueOrError then
+                -- NOW we'll check for if the key was explicitly encoded, because we don't to stop
+                -- the value from encoding, since we've already checked that and it *has* been
+                if EncodedKeyOrError then
+                    -- Add the encoded key (In brackets or not, according to `EncloseInBrackets`), then set it "equal" to, ready for the value
+                    Output = Output .. ((EncloseInBrackets and string.format("[%s]", EncodedKeyOrError)) or EncodedKeyOrError) .. ((PrettyPrinting and " = ") or "=")
                 end
 
-                KeyWasEncodedIntoOutput = true -- We need to keep track of this!
-            elseif not KeyEncodedSuccess and EncodedKeyOrError then  -- Then `EncodedKeyOrError` is the error msg
+                -- Encode value, we've already checked if `EncodedValueOrError` was returned
+                Output = Output .. EncodedValueOrError
+
+                -- If there's another value after the current index, add a ","!
+                if next(inputTable, Key) then
+                    Output = Output .. ","
+                else
+                    -- Ending string w indent and all
+                    Output = Output .. NewEntryString .. EndingString
+                end
+            elseif OutputWarnings and ((not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError)) then -- Then `Encoded(Key/Value)OrError` is the error msg
+                -- ^^ Then either the key or value wasn't properly checked or encoded, and there
+                -- was an error we need to log!
                 local ErrorMessage = string.format(
-                    "LuaEncode: Failed to encode key of DataType `%s`: %q",
-                    KeyType,
-                    EncodedKeyOrError
+                    "LuaEncode: Failed to encode %s of DataType `%s`: %q",
+                    (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value", -- "key/value" for bool type fallback
+                    ValueType,
+                    (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError)
                 )
 
                 Warn(ErrorMessage) -- Give warning in output of the err aswell
@@ -819,36 +787,6 @@ local function LuaEncode(inputTable, options)
                     "--[[%s]]",
                     ErrorMessage:gsub("%[*%]*", "")
                 )
-            end
-
-            -- No `continue` sob..
-            if KeyWasEncodedIntoOutput then
-                -- Ignoring 2nd arg (`EncloseInBrackets`) because this isn't the key
-                local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false) -- False because it's NOT the key, it's the value
-                
-                if ValueEncodedSuccess and EncodedValueOrError then
-                    Output = Output .. EncodedValueOrError
-
-                    -- If there's another value after the current index, add a ","!
-                    if next(inputTable, Key) then
-                        Output = Output .. ","
-                    else
-                        -- Ending string w indent and all
-                        Output = Output .. NewEntryString .. EndingString
-                    end
-                elseif not ValueEncodedSuccess and EncodedValueOrError ~= nil then
-                    local ErrorMessage = string.format(
-                        "LuaEncode: Failed to encode value of DataType `%s`: %q",
-                        ValueType,
-                        EncodedValueOrError
-                    )
-
-                    Warn(ErrorMessage) -- Give warning in output of the err aswell
-                    Output = Output .. string.format(
-                        "--[[%s]]",
-                        ErrorMessage:gsub("%[*%]*", "")
-                    )
-                end
             end
         end
     end

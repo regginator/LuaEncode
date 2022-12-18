@@ -51,6 +51,7 @@ local Table = {
         false,
         0
     ),
+    RotationCurveKey.new(1, CFrame.new(1, 1, 1), Enum.KeyInterpolationMode.Cubic),
     UDim.new(0, 100),
     UDim2.new(0, 100, 0, 100),
     Vector2.new(1, 1),
@@ -123,6 +124,7 @@ Output:
     Region3.new(Vector3.new(1, 1, 1), Vector3.new(2, 2, 2)),
     Region3int16.new(Vector3int16.new(1, 1, 1), Vector3int16.new(1, 1, 1)),
     TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 0),
+    RotationCurveKey.new(1, CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Enum.KeyInterpolationMode.Cubic),
     UDim.new(0, 100),
     UDim2.new(0, 100, 0, 100),
     Vector2.new(1, 1),

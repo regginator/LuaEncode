@@ -9,3 +9,12 @@ print(LuaEncode(Table, {
     PrettyPrinting = true,
     IndentCount = 4
 }))
+
+--[[
+Output:
+
+{
+    WithMetatable = newproxy(true),
+    WithoutMetatable = newproxy()
+}
+]]

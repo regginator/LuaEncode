@@ -22,3 +22,20 @@ local Encoded = LuaEncode(Table, {
 })
 
 print(Encoded)
+
+--[[
+Output:
+
+{
+    qux = "hi!",
+    baz = {
+        1,
+        "one",
+        true,
+        false,
+        [90] = "ninety",
+        ["hi mom"] = "hello world"
+    },
+    foo = "bar"
+}
+]]
