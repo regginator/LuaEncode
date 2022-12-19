@@ -787,7 +787,6 @@ local function LuaEncode(inputTable, options)
             table.insert(EncodedEntries, EntryOutput)
         end
     end
-
     
     return string.format("{%s}", table.concat(EncodedEntries, ",")) -- Each normal entry)
 end
