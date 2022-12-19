@@ -180,8 +180,7 @@ local function LuaEncode(inputTable, options)
 
     local EndingString = (#IndentString > 0 and IndentString:sub(1, -IndentCount - 1)) or ""
 
-    -- Setup output
-    local Output = "{"
+    -- For number key values, incrementing the current internal index
     local KeyIndex = 1
 
     -- Cases (C-Like) for encoding values, then end setup. Using cases so no elseif bs!
@@ -200,7 +199,7 @@ local function LuaEncode(inputTable, options)
             if isKey and value == KeyIndex then
                 -- ^^ What's EXPECTED unless otherwise explicitly defined, if so, return no encoded num
                 KeyIndex = KeyIndex + 1
-                return nil
+                return nil, false
             end
 
             return tostring(value), true -- True return for 2nd arg means it SHOULD be enclosed with brackets, if it is a key
@@ -737,15 +736,14 @@ local function LuaEncode(inputTable, options)
         end
     end
 
+    -- Setup output tbl
+    local OutputEntries = {}
+
     for Key, Value in next, inputTable do
         local KeyType = Type(Key)
         local ValueType = Type(Value)
             
         if TypeCases[KeyType] and TypeCases[ValueType] then
-            if PrettyPrinting then
-                Output = Output .. NewEntryString .. IndentString
-            end
-
             -- Go through and get key val
             local KeyEncodedSuccess, EncodedKeyOrError, EncloseInBrackets = pcall(TypeCases[KeyType], Key, true) -- The `true` represents if it's a key or not, here it is
             -- Ignoring 2nd arg (`EncloseInBrackets`) because this isn't the key
@@ -757,43 +755,36 @@ local function LuaEncode(inputTable, options)
             if KeyEncodedSuccess and ValueEncodedSuccess and EncodedValueOrError then
                 -- NOW we'll check for if the key was explicitly encoded, because we don't to stop
                 -- the value from encoding, since we've already checked that and it *has* been
-                if EncodedKeyOrError then
-                    -- Add the encoded key (In brackets or not, according to `EncloseInBrackets`), then set it "equal" to, ready for the value
-                    Output = Output .. ((EncloseInBrackets and string.format("[%s]", EncodedKeyOrError)) or EncodedKeyOrError) .. ((PrettyPrinting and " = ") or "=")
-                end
+                local KeyValue = EncodedKeyOrError and ((EncloseInBrackets and string.format("[%s]", EncodedKeyOrError)) or EncodedKeyOrError) .. ((PrettyPrinting and " = ") or "=") or ""
 
-                -- Encode value, we've already checked if `EncodedValueOrError` was returned
-                Output = Output .. EncodedValueOrError
-
-                -- If there's another value after the current index, add a ","!
-                if next(inputTable, Key) then
-                    Output = Output .. ","
-                else
-                    -- Ending string w indent and all
-                    Output = Output .. NewEntryString .. EndingString
-                end
-            elseif OutputWarnings and ((not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError)) then -- Then `Encoded(Key/Value)OrError` is the error msg
+                -- Encode key/value together, we've already checked if `EncodedValueOrError` was returned
+                table.insert(OutputEntries, KeyValue .. EncodedValueOrError)
+            elseif OutputWarnings then -- Then `Encoded(Key/Value)OrError` is the error msg
                 -- ^^ Then either the key or value wasn't properly checked or encoded, and there
                 -- was an error we need to log!
                 local ErrorMessage = string.format(
                     "LuaEncode: Failed to encode %s of DataType `%s`: %q",
                     (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value", -- "key/value" for bool type fallback
                     ValueType,
-                    (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError)
+                    (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError) or "[Failed to get error message]"
                 )
 
                 Warn(ErrorMessage) -- Give warning in output of the err aswell
-                Output = Output .. string.format(
-                    "--[[%s]]",
+                table.insert(OutputEntries, string.format(
+                    "nil%s--[[%s]]",
+                    (PrettyPrinting and " ") or "", -- Adding a space between `nil` or not
                     ErrorMessage:gsub("%[*%]*", "")
-                )
+                ))
             end
         end
     end
 
-    -- And close it on up!
-    Output = Output .. "}"
-    return Output
+    
+    return string.format(
+        "{%s%s}",
+        table.concat(OutputEntries, NewEntryString .. IndentString), -- Each normal entry
+        NewEntryString .. EndingString -- Seperator at the end
+    )
 end
 
 return LuaEncode
