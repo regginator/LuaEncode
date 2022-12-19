@@ -53,10 +53,9 @@ local Warn = warn or function(...)
     print(unpack(Args))
 end
 
--- VERY simple function to get if an object is a service, used in instance path
--- eval because using pcall with declarative syntax is a pain; ah, tuples..
+-- VERY simple function to get if an object is a service, used in instance path eval
 local function IsService(object)
-    local FindServiceSuccess, ServiceObject = pcall(game.FindService, game, object.ClassName)
+    local FindServiceSuccess, ServiceObject = pcall(game.GetService, game, object.ClassName)
 
     if FindServiceSuccess and ServiceObject then
         return true
