@@ -50,9 +50,11 @@
 ___
 
 ## About
+
 This is a fairly simple, user-friendly utility module developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data structures. This natively supports both Luau (Vanilla *or* [Roblox](https://roblox.com)), and Lua 5.1+
 
-### Features:
+### Features
+
 * Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
 * Flexible and user-friendly API.
 * Pretty-printing & custom indentation configuration.
@@ -64,27 +66,41 @@ This is a fairly simple, user-friendly utility module developers can use for **s
 ___
 
 ## Installation
+
 * ### GitHub Releases
+
     You can download the [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and immediately use the module!
+
 * ### Rojo/Wally
+
     If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import in your `Wally.toml` as a dependency:
 
-    - As a dependency in `Wally.toml`:
-        ```toml
-        LuaEncode = "regginator/luaencode@1.1.0"
-        ```
-    - Rojo: (Building manually)
-        ```sh
-        rojo build -o LuaEncode.rbxm
-        ```
+  * As a dependency in `Wally.toml`:
+
+    ```toml
+    LuaEncode = "regginator/luaencode@1.1.0"
+    ```
+
+  * Rojo: (Building manually)
+
+    ```sh
+    rojo build -o LuaEncode.rbxm
+    ```
+
 * ### Git Submodule
+
     If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
+
 * ### Loadstring by Release URL
+
     If you're using a script utility with direct access to `loadstring()`, you can use the following line to import the module into your project:
+
     ```lua
     local LuaEncode = loadstring(game:HttpGet("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
     ```
+
     *(Or with HttpService if using the Roblox API)*
+
     ```lua
     local HttpService = game:GetService("HttpService")
     local LuaEncode = loadstring(HttpService:GetAsync("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
@@ -93,6 +109,7 @@ ___
 ___
 
 ## Basic Usage
+
 ```lua
 local LuaEncode = require("src/LuaEncode")
 
@@ -121,6 +138,7 @@ print(Encoded)
 ```
 
 Expected Output:
+
 ```lua
 {
     qux = "hi!",
@@ -139,24 +157,27 @@ Expected Output:
 ___
 
 ## API
+
 ```lua
 <string> LuaEncode(<table> inputTable, <table?> options)
 ```
 
-#### Options:
+### Options
+
 | Argument           | Type                | Description                         |
 |:-------------------|:--------------------|:------------------------------------|
 | PrettyPrinting     | `<boolean?:false>`  | Whether or not the output should use "pretty printing". |
 | IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. |
 | OutputWarnings     | `<boolean?:true>`   | If "warnings" should be outputted to the console or output (as comments); It's recommended to keep this enabled. |
 | StackLimit         | `<number?:199>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflows and infinite cyclic references. You could use `math.huge` here if you really wanted. |
-| DetectCyclics      | `<boolean?:true>`   | If cyclics (table references "in" themselves) should actively be checked for, and prevented from recursively encoding. |
+| FormatCyclicTables | `<boolean?:true>`   | If LuaEncode should format the codegen with a function wrapping the real table output, assigning any cyclic definitions. This ONLY occurs when there are cyclics in the table, and still returns the expected value in almost ALL use cases. |
 | FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
 | UseInstancePaths   | `<boolean?:false>`  | If `Instance` reference objects should attempt to get its Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before. |
 
 ___
 
 ## Custom Roblox Lua DataType Coverage
+
 *(See [AllRobloxTypes.server.lua](tests/AllRobloxTypes/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
 
 ✔ Implemented | ➖ Partially Implemented | ❌ Unimplemented | ⛔ Never
@@ -208,7 +229,8 @@ ___
 ___
 
 ## License
-```
+
+```txt
 MIT License
 
 Copyright (c) 2022 Reggie <reggie@latte.to>

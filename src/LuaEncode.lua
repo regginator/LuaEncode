@@ -118,12 +118,14 @@ end
     OutputWarnings <boolean?:true> | If "warnings" should be outputted to the console
     or output (as comments); It's recommended to keep this enabled.
 
-    StackLimit <number?:199> | The limit to the stack level before recursive encoding
+    StackLimit <number?:500> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
     cyclic references. You could use `math.huge` here if you really wanted.
 
-    DetectCyclics <boolean?:true> | If cyclics (table references "in" themselves) should
-    actively be checked for, and prevented from recursively encoding.
+    FormatCyclicTables <boolean?:true> | If LuaEncode should format the codegen with a
+    function wrapping the real table output, assigning any cyclic definitions. This ONLY
+    occurs when there are cyclics in the table, and still returns the expected value in
+    almost ALL use cases.
 
     FunctionsReturnRaw <boolean?:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value.
@@ -145,10 +147,13 @@ local function LuaEncode(inputTable, options)
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
         CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
-        CheckType(options.DetectCyclics, "options.DetectCyclics", "boolean", "nil")
+        CheckType(options.FormatCyclicTables, "options.FormatCyclicTables", "boolean", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
+        -- Internal options
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
+        CheckType(options._VisitedTables, "options._StackLevel", "table", "nil")
+        CheckType(options._ValuePaths, "options._ValuePaths", "table", "nil")
     end
 
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
@@ -157,10 +162,13 @@ local function LuaEncode(inputTable, options)
     local IndentCount = options.IndentCount or 0
     local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
     local StackLimit = options.StackLimit or 199
-    local DetectCyclics = (options.DetectCyclics == nil and true) or options.DetectCyclics
+    local FormatCyclicTables = (options.FormatCyclicTables == nil and true) or options.FormatCyclicTables
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
+    -- Internal options (defs)
     local StackLevel = options._StackLevel or 1
+    local VisitedTables = options._VisitedTables or {}
+    local ValuePaths = options._ValuePaths or {} -- For possible codegen assigning 5cyclics directly
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 199
     -- FYI, this is just a very temporary solution for table cyclic refs
@@ -214,11 +222,6 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["table"] = function(value, isKey)
-            -- Then it's a cyclic ref
-            if DetectCyclics and value == inputTable then
-                return "", true
-            end
-
             -- Shallow clone original options tbl
             local NewOptions = ShallowClone(options) do
                 -- Overriding if key because it'd look worse pretty printed in a key
