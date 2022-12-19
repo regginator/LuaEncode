@@ -143,7 +143,8 @@ local function LuaEncode(inputTable, options)
         CheckType(options.FormatCyclicTables, "options.FormatCyclicTables", "boolean", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
-        -- Internal options
+        
+        -- Internal options:
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
         CheckType(options._VisitedTables, "options._StackLevel", "table", "nil")
         CheckType(options._ValuePaths, "options._ValuePaths", "table", "nil")
@@ -158,10 +159,19 @@ local function LuaEncode(inputTable, options)
     local FormatCyclicTables = (options.FormatCyclicTables == nil and true) or options.FormatCyclicTables
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
-    -- Internal options (defs)
+    
+    -- Internal options: (defs)
+
+    -- Internal stack level for depth checks and indenting
     local StackLevel = options._StackLevel or 1
-    local VisitedTables = options._VisitedTables or {}
-    local ValuePaths = options._ValuePaths or {} -- For possible codegen assigning 5cyclics directly
+    -- Set root as visited; cyclic detection
+    local VisitedTables = options._VisitedTables or {[inputTable] = true}
+    -- For possible codegen assigning cyclic refs directly
+    local ValuePaths = options._ValuePaths or {[inputTable] = "root"}
+    -- Table keys CAN be direct memory references instead of a number/key, and if
+    -- it isn't referenced anywhere else, we need to explicity define and assign it
+    -- at runtime, IF it's cyclic
+    local KeyReferences = options._KeyTableReferences or {}
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 199
     -- FYI, this is just a very temporary solution for table cyclic refs
@@ -215,6 +225,24 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["table"] = function(value, isKey)
+            if FormatCyclicTables then
+                local VisitedTable = VisitedTables[value]
+                if VisitedTable then
+                    return string.format(
+                        "{--[[LuaEncode: Duplicate of `%s`]]}",
+                        ValuePaths[value] or "{Unknown Reference}" -- This is the addr of the reference
+                    ), true
+                end
+
+                --[[
+                if not isKey then
+                    ValuePaths[value] = ValuePaths[inputTable]
+                end
+                ]]
+
+                VisitedTables[value] = true
+            end
+
             -- Shallow clone original options tbl
             local NewOptions = ShallowClone(options) do
                 -- Overriding if key because it'd look worse pretty printed in a key
@@ -224,8 +252,11 @@ local function LuaEncode(inputTable, options)
                 -- the REAL IndentCount is set to
                 NewOptions.IndentCount = (isKey and ((not PrettyPrinting and IndentCount) or 1)) or IndentCount
 
-                -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
-                NewOptions._StackLevel = (isKey and 1) or StackLevel + 1
+                -- Internal options
+                NewOptions._StackLevel = (isKey and 1) or StackLevel + 1 -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
+                NewOptions._VisitedTables = VisitedTables
+                NewOptions._ValuePaths = ValuePaths
+                NewOptions._KeyReferences = KeyReferences
             end
 
             return LuaEncode(value, NewOptions), true
@@ -781,7 +812,7 @@ local function LuaEncode(inputTable, options)
             table.insert(EncodedEntries, EntryOutput)
         end
     end
-    
+
     return string.format("{%s}", table.concat(EncodedEntries, ",")) -- Each normal entry)
 end
 
