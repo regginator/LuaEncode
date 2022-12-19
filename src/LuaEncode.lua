@@ -12,7 +12,7 @@ local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring 
         end
     end
 
-    return
+    return nil
 end
 
 -- Simple function for directly checking the type on values, with their input, variable name,
