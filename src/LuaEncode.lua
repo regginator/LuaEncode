@@ -46,13 +46,6 @@ local ShallowClone = table.clone or function(inputTable)
     return ClonedTable
 end
 
--- `warn` is Roblox only, for Lua 5.1+ or Luau we need to do it ourselves or whatever
-local Warn = warn or function(...)
-    local Args = {...}
-    Args[1] = "WARNING: " .. (Args[1] or "")
-    print(unpack(Args))
-end
-
 -- VERY simple function to get if an object is a service, used in instance path eval
 local function IsService(object)
     local FindServiceSuccess, ServiceObject = pcall(game.GetService, game, object.ClassName)
@@ -115,8 +108,8 @@ end
 
     IndentCount <number?:0> | The amount of "spaces" that should be indented per entry.
 
-    OutputWarnings <boolean?:true> | If "warnings" should be outputted to the console
-    or output (as comments); It's recommended to keep this enabled.
+    OutputWarnings <boolean?:true> | If "warnings" should be outputted to the output
+    (as comments); It's recommended to keep this enabled.
 
     StackLimit <number?:500> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
@@ -773,7 +766,6 @@ local function LuaEncode(inputTable, options)
                     (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError) or "(Failed to get error message)"
                 )
 
-                Warn(ErrorMessage) -- Give warning in output of the err aswell
                 EntryOutput = EntryOutput .. string.format(
                     "nil%s--[[%s]]",
                     (PrettyPrinting and " ") or "", -- Adding a space between `nil` or not

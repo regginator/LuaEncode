@@ -168,7 +168,7 @@ ___
 |:-------------------|:--------------------|:------------------------------------|
 | PrettyPrinting     | `<boolean?:false>`  | Whether or not the output should use "pretty printing". |
 | IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. |
-| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be outputted to the console or output (as comments); It's recommended to keep this enabled. |
+| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be outputted to the output (as comments); It's recommended to keep this enabled. |
 | StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflows and infinite cyclic references. You could use `math.huge` here if you really wanted. |
 | FormatCyclicTables | `<boolean?:true>`   | If LuaEncode should format the codegen with a function wrapping the real table output, assigning any cyclic definitions. This ONLY occurs when there are cyclics in the table, and still returns the expected value in almost ALL use cases. |
 | FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
