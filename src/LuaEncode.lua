@@ -161,7 +161,7 @@ local function LuaEncode(inputTable, options)
     local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting
     local IndentCount = options.IndentCount or 0
     local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
-    local StackLimit = options.StackLimit or 199
+    local StackLimit = options.StackLimit or 500
     local FormatCyclicTables = (options.FormatCyclicTables == nil and true) or options.FormatCyclicTables
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
