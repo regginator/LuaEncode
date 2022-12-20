@@ -78,7 +78,7 @@ ___
   * As a dependency in `Wally.toml`:
 
     ```toml
-    LuaEncode = "regginator/luaencode@1.1.1"
+    LuaEncode = "regginator/luaencode@1.1.2"
     ```
 
   * Rojo: (Building manually)
