@@ -509,7 +509,7 @@ local function LuaEncode(inputTable, options)
                 -- ^^ Now, if the path isn't accessable, falls back to the return below
             end
 
-            return string.format("Instance.new(%s)", TypeCase(value.ClassName)), true
+            return string.format("Instance.new(%s)", TypeCase("string", value.ClassName)), true
         end
 
         -- NumberRange.new()
