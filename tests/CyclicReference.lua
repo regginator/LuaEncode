@@ -4,11 +4,14 @@ local Table = {}
 Table[1] = Table
 
 print(LuaEncode(Table, {
-    DetectCyclics = true
+    PrettyPrinting = true,
+    IndentCount = 4
 }))
 
---[[
+--[=[
 Output:
 
-{}
-]]
+{
+    {--[[LuaEncode: Duplicate reference (of parent)]]}
+}
+]=]
