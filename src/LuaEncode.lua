@@ -46,6 +46,52 @@ local ShallowClone = table.clone or function(inputTable)
     return ClonedTable
 end
 
+-- This re-serializes a string back into Lua, for the interpreter
+-- AND humans to read. This fixes `string.format("%q")` only outputting
+-- in system encoding, instead of explicit Lua byte escapes
+local SerializeString do
+    -- These are control characters to be encoded in a certain way in Lua
+    -- rather than just a byte escape (e.g. "\n" -> "\10")
+    local SpecialCharacters = {
+        -- Since the string is being wrapped with double quotes,
+        -- we don't need to escape single quotes
+        ["\""] = "\\\"", -- Double-Quote
+        ["\\"] = "\\\\", -- (Literal) Backslash
+        -- Special ASCII control char codes
+        ["\a"] = "\\a", -- Bell; ASCII #7
+        ["\b"] = "\\b", -- Backspace; ASCII #8
+        ["\t"] = "\\t", -- Horizontal-Tab; ASCII #9
+        ["\n"] = "\\n", -- Newline; ASCII #10
+        ["\v"] = "\\v", -- Vertical-Tab; ASCII #11
+        ["\f"] = "\\f", -- Form-Feed; ASCII #12
+        ["\r"] = "\\r", -- Carriage-Return; ASCII #13
+    }
+    
+    -- We need to assign all extra normal byte escapes for runtime optimization
+    -- ASCII #s 32-126 include all printable characters that AREN'T
+    -- in the extended ASCII list, aside from #127, `DEL`. This
+    -- hits the signed 8-bit integer limit
+    for Index = 0, 255 do
+        local Character = string.char(Index)
+
+        if not SpecialCharacters[Character] and (Index < 32 or Index > 126) then
+            SpecialCharacters[Character] = "\\" .. Index
+        end
+    end
+
+    function SerializeString(inputString)
+        -- Directly concatenating instead of creating a new table for
+        -- speed/memory efficiency
+        NewString = ""
+        for Index = 1, #inputString do
+            local Character = inputString:sub(Index, Index)
+            NewString = NewString .. (SpecialCharacters[Character] or Character)
+        end
+        
+        return "\"" .. NewString .. "\""
+    end
+end
+
 -- VERY simple function to get if an object is a service, used in instance path eval
 local function IsService(object)
     local FindServiceSuccess, ServiceObject = pcall(game.GetService, game, object.ClassName)
@@ -73,13 +119,13 @@ local function EvaluateInstancePath(object, currentPath)
         -- under the DataModel. FYI, GetService uses the ClassName of the
         -- service, not the "name"
 
-        currentPath = string.format(":GetService(%q)", ObjectClassName) .. currentPath
+        currentPath = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. currentPath
     elseif ObjectName:match("^[A-Za-z_][A-Za-z0-9_]*$") then
         -- ^^ Like the `string` DataType, this means means we can
         -- index the name directly in Lua without an explicit string
         currentPath = "." .. ObjectName .. currentPath
     else
-        currentPath = string.format("[%q]", ObjectName) .. currentPath
+        currentPath = "[" .. SerializeString(ObjectName) .. "]" .. currentPath
     end
 
     -- These cases are SPECIFICALLY for getting if the path has reached the
@@ -185,7 +231,7 @@ local function LuaEncode(inputTable, options)
         -- Basic func for getting the direct value of an encoded type without weird table.pack()[1] syntax
         local function TypeCase(typeName, value)
             -- Each of these funcs return a tuple, so it'd be annoying to do case-by-case
-            local EncodedValue = TypeCases[typeName](value, false)
+            local EncodedValue = TypeCases[typeName](value, false) -- False to label as NOT `isKey`
             return EncodedValue
         end
 
@@ -207,7 +253,7 @@ local function LuaEncode(inputTable, options)
                 return value, false -- `EncloseInBrackets` false because ^^^
             end
 
-            return string.format("%q", value), true
+            return SerializeString(value), true
         end
 
         TypeCases["table"] = function(value, isKey)
@@ -287,7 +333,7 @@ local function LuaEncode(inputTable, options)
         -- BrickColor.new()
         TypeCases["BrickColor"] = function(value)
             -- BrickColor.Name represents exactly what we want to encode
-            return string.format("BrickColor.new(%q)", value.Name), true
+            return string.format("BrickColor.new(%s)", TypeCase("string", value.Name)), true
         end
 
         -- CFrame.new()
@@ -442,7 +488,7 @@ local function LuaEncode(inputTable, options)
                 "Font.new(%s)",
                 table.concat(
                     {
-                        string.format("%q", value.Family),
+                        TypeCase("string", value.Family),
                         TypeCase("EnumItem", value.Weight),
                         TypeCase("EnumItem", value.Style),
                     },
@@ -463,7 +509,7 @@ local function LuaEncode(inputTable, options)
                 -- ^^ Now, if the path isn't accessable, falls back to the return below
             end
 
-            return string.format("Instance.new(%q)", value.ClassName), true
+            return string.format("Instance.new(%s)", TypeCase(value.ClassName)), true
         end
 
         -- NumberRange.new()
@@ -525,7 +571,7 @@ local function LuaEncode(inputTable, options)
                     {
                         TypeCase("Vector3", value.Position),
                         TypeCase("EnumItem", value.Action),
-                        string.format("%q", value.Label),
+                        TypeCase("string", value.Label),
                     },
                     ValueSeperator
                 )
@@ -771,10 +817,10 @@ local function LuaEncode(inputTable, options)
                 -- ^^ Then either the key or value wasn't properly checked or encoded, and there
                 -- was an error we need to log!
                 local ErrorMessage = string.format(
-                    "LuaEncode: Failed to encode %s of DataType `%s`: %q",
+                    "LuaEncode: Failed to encode %s of DataType `%s`: %s",
                     (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value", -- "key/value" for bool type fallback
                     ValueType,
-                    (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError) or "(Failed to get error message)"
+                    (not KeyEncodedSuccess and SerializeString(EncodedKeyOrError)) or (not ValueEncodedSuccess and SerializeString(EncodedValueOrError)) or "(Failed to get error message)"
                 )
 
                 EntryOutput = EntryOutput .. string.format(
@@ -793,7 +839,8 @@ local function LuaEncode(inputTable, options)
         end
     end
 
-    return string.format("{%s}", table.concat(EncodedEntries, ",")) -- Each normal entry)
+    -- Return wrapped table
+    return "{" .. table.concat(EncodedEntries, ",") .. "}"
 end
 
 return LuaEncode
