@@ -140,14 +140,12 @@ local function LuaEncode(inputTable, options)
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
         CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
-        CheckType(options.FormatCyclicTables, "options.FormatCyclicTables", "boolean", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
         
         -- Internal options:
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
         CheckType(options._VisitedTables, "options._StackLevel", "table", "nil")
-        CheckType(options._ValuePaths, "options._ValuePaths", "table", "nil")
     end
 
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
@@ -156,22 +154,15 @@ local function LuaEncode(inputTable, options)
     local IndentCount = options.IndentCount or 0
     local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
     local StackLimit = options.StackLimit or 500
-    local FormatCyclicTables = (options.FormatCyclicTables == nil and true) or options.FormatCyclicTables
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
     
-    -- Internal options: (defs)
+    -- Internal options:
 
     -- Internal stack level for depth checks and indenting
     local StackLevel = options._StackLevel or 1
     -- Set root as visited; cyclic detection
-    local VisitedTables = options._VisitedTables or {[inputTable] = true}
-    -- For possible codegen assigning cyclic refs directly
-    local ValuePaths = options._ValuePaths or {[inputTable] = "root"}
-    -- Table keys CAN be direct memory references instead of a number/key, and if
-    -- it isn't referenced anywhere else, we need to explicity define and assign it
-    -- at runtime, IF it's cyclic
-    local KeyReferences = options._KeyTableReferences or {}
+    local VisitedTables = options._VisitedTables or {[inputTable] = true} -- [`visitedTable <table>`] = `isVisited <boolean>`
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 199
     -- FYI, this is just a very temporary solution for table cyclic refs
@@ -225,20 +216,15 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["table"] = function(value, isKey)
-            if FormatCyclicTables then
+            -- Check duplicate/cyclic references
+            do
                 local VisitedTable = VisitedTables[value]
                 if VisitedTable then
                     return string.format(
-                        "{--[[LuaEncode: Duplicate of `%s`]]}",
-                        ValuePaths[value] or "{Unknown Reference}" -- This is the addr of the reference
-                    ), true
+                        "{--[[LuaEncode: Duplicate reference%s]]}",
+                        (value == inputTable and " (of parent)") or ""
+                    )
                 end
-
-                --[[
-                if not isKey then
-                    ValuePaths[value] = ValuePaths[inputTable]
-                end
-                ]]
 
                 VisitedTables[value] = true
             end
@@ -255,8 +241,6 @@ local function LuaEncode(inputTable, options)
                 -- Internal options
                 NewOptions._StackLevel = (isKey and 1) or StackLevel + 1 -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
                 NewOptions._VisitedTables = VisitedTables
-                NewOptions._ValuePaths = ValuePaths
-                NewOptions._KeyReferences = KeyReferences
             end
 
             return LuaEncode(value, NewOptions), true
@@ -768,12 +752,13 @@ local function LuaEncode(inputTable, options)
     for Key, Value in next, inputTable do
         local KeyType = Type(Key)
         local ValueType = Type(Value)
-            
+
         if TypeCases[KeyType] and TypeCases[ValueType] then
             local EntryOutput = (PrettyPrinting and NewEntryString .. IndentString) or ""
 
             -- Go through and get key val
             local KeyEncodedSuccess, EncodedKeyOrError, EncloseInBrackets = pcall(TypeCases[KeyType], Key, true) -- The `true` represents if it's a key or not, here it is
+
             -- Ignoring 2nd arg (`EncloseInBrackets`) because this isn't the key
             local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false) -- `false` because it's NOT the key, it's the value
 
