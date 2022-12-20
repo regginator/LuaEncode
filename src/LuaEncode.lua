@@ -3,6 +3,9 @@
 -- https://github.com/regginator/LuaEncode
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
+local gsub = string.gsub;
+local unpack = unpack or table.unpack
+local fixString, tableEncode;
 
 -- Lua 5.1 doesn't have table.find
 local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring the `init` arg, unneeded for us
@@ -12,7 +15,7 @@ local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring 
         end
     end
 
-    return nil
+    return
 end
 
 -- Simple function for directly checking the type on values, with their input, variable name,
@@ -46,9 +49,17 @@ local ShallowClone = table.clone or function(inputTable)
     return ClonedTable
 end
 
--- VERY simple function to get if an object is a service, used in instance path eval
+-- `warn` is Roblox only, for Lua 5.1+ or Luau we need to do it ourselves or whatever
+local Warn = warn or function(...)
+    local Args = {...}
+    Args[1] = "WARNING: " .. (Args[1] or "")
+    print(unpack(Args))
+end
+
+-- VERY simple function to get if an object is a service, used in instance path
+-- eval because using pcall with declarative syntax is a pain; ah, tuples..
 local function IsService(object)
-    local FindServiceSuccess, ServiceObject = pcall(game.GetService, game, object.ClassName)
+    local FindServiceSuccess, ServiceObject = pcall(game.FindService, game, object.ClassName)
 
     if FindServiceSuccess and ServiceObject then
         return true
@@ -73,14 +84,16 @@ local function EvaluateInstancePath(object, currentPath)
         -- under the DataModel. FYI, GetService uses the ClassName of the
         -- service, not the "name"
 
-        currentPath = string.format(":GetService(%q)", ObjectClassName) .. currentPath
+        currentPath = string.format(":GetService('%s')", ObjectClassName) .. currentPath
     elseif ObjectName:match("^[A-Za-z_][A-Za-z0-9_]*$") then
         -- ^^ Like the `string` DataType, this means means we can
         -- index the name directly in Lua without an explicit string
         currentPath = "." .. ObjectName .. currentPath
     else
-        currentPath = string.format("[%q]", ObjectName) .. currentPath
+        currentPath = ObjectName .. currentPath
     end
+
+	currentPath = fixString(currentPath) -- path could have weird symbols
 
     -- These cases are SPECIFICALLY for getting if the path has reached the
     -- "end" for the evaluation process, including if the root parent is nil
@@ -98,8 +111,31 @@ local function EvaluateInstancePath(object, currentPath)
     return EvaluateInstancePath(ObjectParent, currentPath)
 end
 
+local EscapedChars = { -- List of common escaped chars
+    ['\n'] = '\\n',
+    ['\a'] = '\\a',
+    ['\f'] = '\\f',
+    ['\r'] = '\\r',
+    ['\t'] = '\\t',
+    ['\0'] = '\\0',
+    ["\\"] = '\\\\',
+    ["/"] = '/',
+    ["'"] = "\\'",
+}
+
+local ControlCharEscapes = {} -- \a => nil, \0 => \000, 31 => \031 
+-- from https://github.com/kikito/inspect.lua
+for i=0, 31 do
+	local ch = string.char(i)
+	if not EscapedChars[ch] then
+		EscapedChars[ch] = "\\"..i
+		ControlCharEscapes[ch]  = string.format("\\%03d", i)
+	end
+end
+
+
 --[[
-<string> LuaEncode(<table> inputTable, <table?> options):
+<string> tableEncode(<table> inputTable, <table?> options):
 
     ---------- SETTINGS: ----------
 
@@ -108,17 +144,15 @@ end
 
     IndentCount <number?:0> | The amount of "spaces" that should be indented per entry.
 
-    OutputWarnings <boolean?:true> | If "warnings" should be outputted to the output
-    (as comments); It's recommended to keep this enabled.
+    OutputWarnings <boolean?:true> | If "warnings" should be outputted to the console
+    or output (as comments); It's recommended to keep this enabled.
 
-    StackLimit <number?:500> | The limit to the stack level before recursive encoding
+    StackLimit <number?:199> | The limit to the stack level before recursive encoding
     cuts off, and stops execution. This is used to prevent stack overflows and infinite
     cyclic references. You could use `math.huge` here if you really wanted.
 
-    FormatCyclicTables <boolean?:true> | If LuaEncode should format the codegen with a
-    function wrapping the real table output, assigning any cyclic definitions. This ONLY
-    occurs when there are cyclics in the table, and still returns the expected value in
-    almost ALL use cases.
+    DetectCyclics <boolean?:true> | If cyclics (table references "in" themselves) should
+    actively be checked for, and prevented from recursively encoding.
 
     FunctionsReturnRaw <boolean?:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value.
@@ -129,7 +163,26 @@ end
     before.
 
 ]]
-local function LuaEncode(inputTable, options)
+
+
+local parsedTables = {}
+local cyclicTables = {}
+local indexPath = {}
+
+local function indexAllFromPath(path)
+	local output = ""
+	for i,v in pairs(path) do
+		if type(v) == "table" then -- if index is table
+			output = output .. indexAllFromPath(parsedTables[v])
+		else
+			output = output .. "["..v.."]"
+		end
+	end
+	return output
+end
+
+
+local function LuaEncode(inputTable, options) -- loader
     -- Check all arg and option types
     CheckType(inputTable, "inputTable", "table") -- Required*, nil not allowed
     options = CheckType(options, "options", "table", "nil") or {} -- `options` is an optional arg
@@ -138,40 +191,71 @@ local function LuaEncode(inputTable, options)
     if options then
         CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil")
         CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
-        CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
-        CheckType(options.FormatCyclicTables, "options.FormatCyclicTables", "boolean", "nil")
+        CheckType(options.DetectCyclics, "options.DetectCyclics", "boolean", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
-        
-        -- Internal options:
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
-        CheckType(options._VisitedTables, "options._StackLevel", "table", "nil")
-        CheckType(options._ValuePaths, "options._ValuePaths", "table", "nil")
+		CheckType(options.MaxStringSize, "options.MaxStringSize", "number", "nil")
+        CheckType(options.FormatCylicTables, "options.OutputWarnings", "boolean", "nil"); options.FormatCylicTables = options.FormatCylicTables == nil and true or options.FormatCylicTables
     end
 
+	parsedTables = {} -- empty list
+	cyclicTables = {}
+	indexPath = {}
+
+	parsedTables[inputTable] = true
+
+	local results = tableEncode(inputTable, options);
+
+	if not options.FormatCylicTables or not next(cyclicTables) then
+		return results;
+	end
+
+    local separator = (options.PrettyPrinting and "\n") or " "
+    local indentString = string.rep(" ", options.IndentCount) -- If 0 this will just be ""
+	-- format cyclic tables
+
+	local output = "(function(t)";
+
+	for _, cyclicInfo in pairs(cyclicTables) do
+		local index, path = cyclicInfo[1], cyclicInfo[2];
+			if type(index) == "boolean" then
+				output = output..("%s%st%s = t"):format(separator, indentString, indexAllFromPath(path))
+			elseif type(index) == "table" then
+				output = output..("%s%st%s = t%s"):format(separator, indentString, indexAllFromPath(path), indexAllFromPath(index))
+			else
+				output = output..("%s%st%s = t[%s]"):format(separator, indentString, indexAllFromPath(path), index)
+			end
+	end
+
+	output = output..("%s%sreturn t;%send)"):format(separator, indentString, separator)
+	output = output..("(%s)"):format(results)
+
+	return output;
+
+end
+
+function tableEncode(inputTable, options, path)
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
     local PrettyPrinting = (options.PrettyPrinting == nil and false) or options.PrettyPrinting
     local IndentCount = options.IndentCount or 0
     local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
-    local StackLimit = options.StackLimit or 500
-    local FormatCyclicTables = (options.FormatCyclicTables == nil and true) or options.FormatCyclicTables
+    local StackLimit = options.StackLimit or 199
+    local DetectCyclics = (options.DetectCyclics == nil and true) or options.DetectCyclics
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and false) or options.UseInstancePaths
-    
-    -- Internal options: (defs)
-
-    -- Internal stack level for depth checks and indenting
     local StackLevel = options._StackLevel or 1
-    -- Set root as visited; cyclic detection
-    local VisitedTables = options._VisitedTables or {[inputTable] = true}
-    -- For possible codegen assigning cyclic refs directly
-    local ValuePaths = options._ValuePaths or {[inputTable] = "root"}
-    -- Table keys CAN be direct memory references instead of a number/key, and if
-    -- it isn't referenced anywhere else, we need to explicity define and assign it
-    -- at runtime, IF it's cyclic
-    local KeyReferences = options._KeyTableReferences or {}
+    local MaxStringSize = options.MaxStringSize or 10000
+	local FormatCylicTables = options.FormatCylicTables
+
+	function fixString(str)
+		if #str > MaxStringSize then
+			return "String was too big ("..#str.." chars)"
+		end
+		return gsub(gsub(gsub(gsub(str, "\\", "\\\\"), "(%c)%f[0-9]", ControlCharEscapes), "%c", EscapedChars), "\"", "\\\"")
+	end
 
     -- Stack overflow/output abuse or whatever, default StackLimit is 199
     -- FYI, this is just a very temporary solution for table cyclic refs
@@ -190,9 +274,10 @@ local function LuaEncode(inputTable, options)
 
     local EndingString = (#IndentString > 0 and IndentString:sub(1, -IndentCount - 1)) or ""
 
-    -- For number key values, incrementing the current internal index
+    -- Setup output
+    local Output = "{"
     local KeyIndex = 1
-
+	
     -- Cases (C-Like) for encoding values, then end setup. Using cases so no elseif bs!
     -- Functions are all expected to return a (<string> EncodedKey, <boolean?> EncloseInBrackets)
     local TypeCases = {} do
@@ -209,7 +294,7 @@ local function LuaEncode(inputTable, options)
             if isKey and value == KeyIndex then
                 -- ^^ What's EXPECTED unless otherwise explicitly defined, if so, return no encoded num
                 KeyIndex = KeyIndex + 1
-                return nil, false
+                return nil
             end
 
             return tostring(value), true -- True return for 2nd arg means it SHOULD be enclosed with brackets, if it is a key
@@ -221,27 +306,23 @@ local function LuaEncode(inputTable, options)
                 return value, false -- `EncloseInBrackets` false because ^^^
             end
 
-            return string.format("%q", value), true
+            return '"'..fixString(value)..'"', true
         end
 
         TypeCases["table"] = function(value, isKey)
-            if FormatCyclicTables then
-                local VisitedTable = VisitedTables[value]
-                if VisitedTable then
-                    return string.format(
-                        "{--[[LuaEncode: Duplicate of `%s`]]}",
-                        ValuePaths[value] or "{Unknown Reference}" -- This is the addr of the reference
-                    ), true
-                end
 
-                --[[
-                if not isKey then
-                    ValuePaths[value] = ValuePaths[inputTable]
-                end
-                ]]
+            if DetectCyclics and parsedTables[value] then -- value
+				local index = parsedTables[value];
+				if FormatCylicTables then
+					--local rootPath = type(path) == "boolean" and "" or indexAllFromPath(path)
+					rootPath = ""
+					cyclicTables[value] = {index, path}
+					return "{--[[ LuaEncode: duplicate of 'Root"..rootPath.."']]}", true
+				end
+                return "{--[[ LuaEncode: duplicate]]}", true
+			end;
 
-                VisitedTables[value] = true
-            end
+			parsedTables[value] = path
 
             -- Shallow clone original options tbl
             local NewOptions = ShallowClone(options) do
@@ -252,14 +333,13 @@ local function LuaEncode(inputTable, options)
                 -- the REAL IndentCount is set to
                 NewOptions.IndentCount = (isKey and ((not PrettyPrinting and IndentCount) or 1)) or IndentCount
 
-                -- Internal options
-                NewOptions._StackLevel = (isKey and 1) or StackLevel + 1 -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
-                NewOptions._VisitedTables = VisitedTables
-                NewOptions._ValuePaths = ValuePaths
-                NewOptions._KeyReferences = KeyReferences
+                -- If isKey, stack lvl is set to the **LOWEST** because it's the key to a value
+                NewOptions._StackLevel = (isKey and 1) or StackLevel + 1
             end
 
-            return LuaEncode(value, NewOptions), true
+			local results = tableEncode(value, NewOptions, path)
+
+            return results, true
         end
 
         TypeCases["boolean"] = function(value)
@@ -308,7 +388,7 @@ local function LuaEncode(inputTable, options)
         -- BrickColor.new()
         TypeCases["BrickColor"] = function(value)
             -- BrickColor.Name represents exactly what we want to encode
-            return string.format("BrickColor.new(%q)", value.Name), true
+            return string.format("BrickColor.new('%s')", value.Name), true
         end
 
         -- CFrame.new()
@@ -322,7 +402,7 @@ local function LuaEncode(inputTable, options)
         -- CatalogSearchParams.new()
         TypeCases["CatalogSearchParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(%s)",
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
                 table.concat(
                     {
                         "CatalogSearchParams.new()",
@@ -463,7 +543,7 @@ local function LuaEncode(inputTable, options)
                 "Font.new(%s)",
                 table.concat(
                     {
-                        string.format("%q", value.Family),
+                        string.format("'%s'", value.Family),
                         TypeCase("EnumItem", value.Weight),
                         TypeCase("EnumItem", value.Style),
                     },
@@ -484,7 +564,7 @@ local function LuaEncode(inputTable, options)
                 -- ^^ Now, if the path isn't accessable, falls back to the return below
             end
 
-            return string.format("Instance.new(%q)", value.ClassName), true
+            return string.format("Instance.new('%s')", value.ClassName), true
         end
 
         -- NumberRange.new()
@@ -521,7 +601,7 @@ local function LuaEncode(inputTable, options)
         -- OverlapParams.new()
         TypeCases["OverlapParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(%s)",
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
                 table.concat(
                     {
                         "OverlapParams.new()",
@@ -546,7 +626,7 @@ local function LuaEncode(inputTable, options)
                     {
                         TypeCase("Vector3", value.Position),
                         TypeCase("EnumItem", value.Action),
-                        string.format("%q", value.Label),
+                        string.format("'%s'", value.Label),
                     },
                     ValueSeperator
                 )
@@ -592,7 +672,7 @@ local function LuaEncode(inputTable, options)
         -- RaycastParams.new()
         TypeCases["RaycastParams"] = function(value)
             return string.format(
-                "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(%s)",
+                "(function(v, p) for pn, pv in next, p do v[pn] = pv end end)(%s)",
                 table.concat(
                     {
                         "RaycastParams.new()",
@@ -762,15 +842,18 @@ local function LuaEncode(inputTable, options)
         end
     end
 
-    -- Setup output tbl
-    local EncodedEntries = {}
-
     for Key, Value in next, inputTable do
         local KeyType = Type(Key)
         local ValueType = Type(Value)
-            
+
+		if FormatCylicTables then
+			path = path and {unpack(path), Key} or {Key}
+		end
+
         if TypeCases[KeyType] and TypeCases[ValueType] then
-            local EntryOutput = (PrettyPrinting and NewEntryString .. IndentString) or ""
+            if PrettyPrinting then
+                Output = Output .. NewEntryString .. IndentString
+            end
 
             -- Go through and get key val
             local KeyEncodedSuccess, EncodedKeyOrError, EncloseInBrackets = pcall(TypeCases[KeyType], Key, true) -- The `true` represents if it's a key or not, here it is
@@ -780,40 +863,52 @@ local function LuaEncode(inputTable, options)
             -- Im sorry for this logic chain here, I can't use `continue`/`continue()`.. :sob:
             -- Ignoring `if EncodedKeyOrError` because the key doesn't actually need to ALWAYS
             -- be explicitly encoded, like if it's a number of the current key index!
+
             if KeyEncodedSuccess and ValueEncodedSuccess and EncodedValueOrError then
                 -- NOW we'll check for if the key was explicitly encoded, because we don't to stop
                 -- the value from encoding, since we've already checked that and it *has* been
-                local KeyValue = EncodedKeyOrError and ((EncloseInBrackets and string.format("[%s]", EncodedKeyOrError)) or EncodedKeyOrError) .. ((PrettyPrinting and " = ") or "=") or ""
+                if EncodedKeyOrError then
+                    -- Add the encoded key (In brackets or not, according to `EncloseInBrackets`), then set it "equal" to, ready for the value
+                    Output = Output .. ((EncloseInBrackets and string.format("[%s]", EncodedKeyOrError)) or EncodedKeyOrError) .. ((PrettyPrinting and " = ") or "=")
+                end
 
-                -- Encode key/value together, we've already checked if `EncodedValueOrError` was returned
-                EntryOutput = EntryOutput .. KeyValue .. EncodedValueOrError
-            elseif OutputWarnings then -- Then `Encoded(Key/Value)OrError` is the error msg
+                -- Encode value, we've already checked if `EncodedValueOrError` was returned
+                Output = Output .. EncodedValueOrError
+
+                -- If there's another value after the current index, add a ","!
+                if next(inputTable, Key) then
+                    Output = Output .. ","
+                else
+                    -- Ending string w indent and all
+                    Output = Output .. NewEntryString .. EndingString
+                end
+            elseif OutputWarnings and ((not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError)) then -- Then `Encoded(Key/Value)OrError` is the error msg
                 -- ^^ Then either the key or value wasn't properly checked or encoded, and there
                 -- was an error we need to log!
                 local ErrorMessage = string.format(
                     "LuaEncode: Failed to encode %s of DataType `%s`: %q",
                     (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value", -- "key/value" for bool type fallback
                     ValueType,
-                    (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError) or "(Failed to get error message)"
+                    (not KeyEncodedSuccess and EncodedKeyOrError) or (not ValueEncodedSuccess and EncodedValueOrError)
                 )
 
-                EntryOutput = EntryOutput .. string.format(
-                    "nil%s--[[%s]]",
-                    (PrettyPrinting and " ") or "", -- Adding a space between `nil` or not
+                Warn(ErrorMessage) -- Give warning in output of the err aswell
+                Output = Output .. string.format(
+                    "--[[%s]]",
                     ErrorMessage:gsub("%[*%]*", "")
                 )
             end
-
-            -- If there isn't another value after the current index, add ending formatting
-            if not next(inputTable, Key) then
-                EntryOutput = EntryOutput .. NewEntryString .. EndingString
-            end
-
-            table.insert(EncodedEntries, EntryOutput)
         end
-    end
 
-    return string.format("{%s}", table.concat(EncodedEntries, ",")) -- Each normal entry)
+		if FormatCylicTables then
+			path = nil
+		end
+
+	end
+
+    -- And close it on up!
+    Output = Output .. "}"
+    return Output
 end
 
 return LuaEncode
