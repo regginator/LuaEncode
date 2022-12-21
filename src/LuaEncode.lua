@@ -30,7 +30,6 @@ local function CheckType(inputData, dataName, ...)
         ), 0)
     end
 
-
     return inputData -- Return back input directly
 end
 
