@@ -81,7 +81,7 @@ local SerializeString do
     function SerializeString(inputString)
         -- Replace all null bytes, ctrl chars, dbl quotes, literal backslashes,
         -- and bytes 0-31 and 127-255 with their respecive escapes
-        return "\"" .. string.gsub(inputString, "[%z%c\"\\\0-\31\127-\255]", SpecialCharacters) .. "\""
+        return "\"" .. string.gsub(inputString, "[\"\\\0-\31\127-\255]", SpecialCharacters) .. "\""
     end
 end
 
