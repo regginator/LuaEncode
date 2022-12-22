@@ -88,7 +88,7 @@ Output:
     }),
     ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
     DateTime.fromUnixTimestamp(123456),
-    DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, false, false, 150, 150, 100, 100),
+    DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, true, false, 150, 150, 100, 100),
     Enum.UserInputType,
     Enum.UserInputType.Gyro,
     Enum,

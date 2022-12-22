@@ -79,15 +79,9 @@ local SerializeString do
     end
 
     function SerializeString(inputString)
-        -- Directly concatenating instead of creating a new table for
-        -- speed/memory efficiency
-        NewString = ""
-        for Index = 1, #inputString do
-            local Character = inputString:sub(Index, Index)
-            NewString = NewString .. (SpecialCharacters[Character] or Character)
-        end
-        
-        return "\"" .. NewString .. "\""
+        -- Replace all null bytes, ctrl chars, dbl quotes, literal backslashes,
+        -- and bytes 0-31 and 127-255 with their respecive escapes
+        return "\"" .. string.gsub(inputString, "[%z%c\"\\\0-\31\127-\255]", SpecialCharacters) .. "\""
     end
 end
 
@@ -119,7 +113,7 @@ local function EvaluateInstancePath(object, currentPath)
         -- service, not the "name"
 
         currentPath = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. currentPath
-    elseif ObjectName:match("^[A-Za-z_][A-Za-z0-9_]*$") then
+    elseif string.match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
         -- ^^ Like the `string` DataType, this means means we can
         -- index the name directly in Lua without an explicit string
         currentPath = "." .. ObjectName .. currentPath
@@ -247,7 +241,7 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["string"] = function(value, isKey)
-            if isKey and value:match("^[A-Za-z_][A-Za-z0-9_]*$") then
+            if isKey and string.match(value, "^[A-Za-z_][A-Za-z0-9_]*$") then
                 -- ^^ Then it's a syntaxically-correct variable, doesn't need explicit string def
                 return value, false -- `EncloseInBrackets` false because ^^^
             end
@@ -411,16 +405,16 @@ local function LuaEncode(inputTable, options)
                 table.concat(
                     {
                         -- InitialDockState (Enum.InitialDockState)
-                        TypeCase("EnumItem", Enum.InitialDockState[ValueString:match("InitialDockState:(%w+)")]), -- Enum.InitialDockState.Right
+                        TypeCase("EnumItem", Enum.InitialDockState[string.match(ValueString, "InitialDockState:(%w+)")]), -- Enum.InitialDockState.Right
                         -- InitialEnabled and InitialEnabledShouldOverrideRestore (boolean as number; `0` or `1`)
-                        TypeCase("boolean", ValueString:match("InitialEnabled:(%w+)") == 1), -- false
-                        TypeCase("boolean", ValueString:match("InitialEnabledShouldOverrideRestore:(%w+)") == 1), -- false
+                        TypeCase("boolean", string.match(ValueString, "InitialEnabled:(%w+)") == "1"), -- false
+                        TypeCase("boolean", string.match(ValueString, "InitialEnabledShouldOverrideRestore:(%w+)") == "1"), -- false
                         -- FloatingXSize/FloatingYSize (numbers)
-                        ValueString:match("FloatingXSize:(%w+)"), -- 0
-                        ValueString:match("FloatingYSize:(%w+)"), -- 0
+                        string.match(ValueString, "FloatingXSize:(%w+)"), -- 0
+                        string.match(ValueString, "FloatingYSize:(%w+)"), -- 0
                         -- MinWidth/MinHeight (numbers)
-                        ValueString:match("MinWidth:(%w+)"), -- 0
-                        ValueString:match("MinHeight:(%w+)"), -- 0
+                        string.match(ValueString, "MinWidth:(%w+)"), -- 0
+                        string.match(ValueString, "MinHeight:(%w+)"), -- 0
                     },
                     ValueSeperator
                 )
@@ -825,7 +819,7 @@ local function LuaEncode(inputTable, options)
                 EntryOutput = EntryOutput .. string.format(
                     "nil%s--[[%s]]",
                     (PrettyPrinting and " ") or "", -- Adding a space between `nil` or not
-                    ErrorMessage:gsub("%[*%]*", "")
+                    ErrorMessage:gsub("%[*%]*", "") -- Not using string global lib because it returns a tuple
                 )
             end
 

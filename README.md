@@ -57,10 +57,11 @@ This is a fairly simple, user-friendly utility module developers can use for **s
 
 * Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
 * Flexible and user-friendly API.
+* Fast, optimized, and efficient!
 * Pretty-printing & custom indentation configuration.
 * `type()` **and** `typeof()` support for *full* custom Roblox DataType support (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
 * Secure iteration and value reading, so you can also use this with something like user-generated input and "RemoteSpy" scripts.
-* **Built in** cyclic detection and stack limits, [both optional flags](#api).
+* **Built in** duplicate/cyclic detection and stack limits, [both optional flags](#api).
 * Raw keys/values with `FunctionsReturnRaw`.
 
 ___
@@ -78,7 +79,7 @@ ___
   * As a dependency in `Wally.toml`:
 
     ```toml
-    LuaEncode = "regginator/luaencode@1.1.3"
+    LuaEncode = "regginator/luaencode@1.1.4"
     ```
 
   * Rojo: (Building manually)
