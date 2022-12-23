@@ -142,25 +142,23 @@ end
 
     ---------- SETTINGS: ----------
 
-    PrettyPrinting <boolean?:false> | Whether or not the output should use "pretty
-    printing".
+    PrettyPrinting <boolean?:false> | Whether or not the output should use pretty printing.
 
     IndentCount <number?:0> | The amount of "spaces" that should be indented per entry.
 
-    OutputWarnings <boolean?:true> | If "warnings" should be outputted to the output
-    (as comments); It's recommended to keep this enabled.
+    OutputWarnings <boolean?:true> | If "warnings" should be placed to the output (as
+    comments); It's recommended to keep this enabled, however this can be disabled at ease.
 
-    StackLimit <number?:500> | The limit to the stack level before recursive encoding
-    cuts off, and stops execution. This is used to prevent stack overflows and infinite
-    cyclic references. You could use `math.huge` here if you really wanted.
+    StackLimit <number?:500> | The limit to the stack level before recursive encoding cuts
+    off, and stops execution. This is used to prevent stack overflow errors and such. You
+    could use `math.huge` here if you really wanted.
 
     FunctionsReturnRaw <boolean?:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value.
 
-    UseInstancePaths <boolean?:false> | If `Instance` reference objects should attempt to
-    get its Lua-accessable path for encoding. If the instance is parented under `nil` or
-    isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as
-    before.
+    UseInstancePaths <boolean?:false> | If `Instance` reference objects should return their
+    Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under
+    `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before.
 
 ]]
 local function LuaEncode(inputTable, options)

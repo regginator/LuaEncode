@@ -56,13 +56,13 @@ This is a fairly simple, user-friendly utility module developers can use for **s
 ### Features
 
 * Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
-* Flexible and user-friendly API.
 * Fast, optimized, and efficient!
-* Pretty-printing & custom indentation configuration.
+* Flexible and user-friendly API.
+* Pretty-printing and custom indentation.
 * `type()` **and** `typeof()` support for *full* custom Roblox DataType support (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
 * Secure iteration and value reading, so you can also use this with something like user-generated input and "RemoteSpy" scripts.
-* **Built in** duplicate/cyclic detection and stack limits, [both optional flags](#api).
-* Raw keys/values with `FunctionsReturnRaw`.
+* **Built in** duplicate/cyclic detection and [stack limit](#api).
+* Raw keys/values with [`FunctionsReturnRaw`](#api).
 
 ___
 
@@ -167,12 +167,12 @@ ___
 
 | Argument           | Type                | Description                         |
 |:-------------------|:--------------------|:------------------------------------|
-| PrettyPrinting     | `<boolean?:false>`  | Whether or not the output should use "pretty printing". |
+| PrettyPrinting     | `<boolean?:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting). |
 | IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. |
-| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be outputted to the output (as comments); It's recommended to keep this enabled. |
-| StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflows and infinite cyclic references. You could use `math.huge` here if you really wanted. |
+| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be placed to the output (as comments); It's recommended to keep this enabled, however this can be disabled at ease. |
+| StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted. |
 | FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
-| UseInstancePaths   | `<boolean?:false>`  | If `Instance` reference objects should attempt to get its Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before. |
+| UseInstancePaths   | `<boolean?:false>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before. |
 
 ___
 
