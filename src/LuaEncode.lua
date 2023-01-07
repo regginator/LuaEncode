@@ -235,6 +235,13 @@ local function LuaEncode(inputTable, options)
                 return nil, false
             end
 
+            -- Lua's internal `tostring` handling will denote positive-infinite number TValues as "inf", which
+            -- makes certain numbers not encode properly
+            if value == math.huge then
+                return "math.huge", true
+            end
+
+            -- Fallback to the value's tostring val
             return tostring(value), true -- True return for 2nd arg means it SHOULD be enclosed with brackets, if it is a key
         end
 
