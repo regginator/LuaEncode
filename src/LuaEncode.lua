@@ -4,6 +4,10 @@
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists
 
+-- For num checks
+local PositiveInf = math.huge
+local NegativeInf = -math.huge
+
 -- Lua 5.1 doesn't have table.find
 local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring the `init` arg, unneeded for us
     for Key, Value in ipairs(inputTable) do
@@ -11,8 +15,6 @@ local FindInTable = table.find or function(inputTable, valueToFind) -- Ignoring 
             return Key -- Return the key idx
         end
     end
-
-    return nil
 end
 
 -- Simple function for directly checking the type on values, with their input, variable name,
@@ -87,7 +89,7 @@ end
 
 -- VERY simple function to get if an object is a service, used in instance path eval
 local function IsService(object)
-    local FindServiceSuccess, ServiceObject = pcall(game.GetService, game, object.ClassName)
+    local FindServiceSuccess, ServiceObject = pcall(game.FindService, game, object.ClassName)
 
     if FindServiceSuccess and ServiceObject then
         return true
