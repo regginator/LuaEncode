@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 rm -r -f ./build # If old `./build`, remove
 mkdir ./build
