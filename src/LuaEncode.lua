@@ -67,7 +67,7 @@ local SerializeString do
         ["\f"] = "\\f", -- Form-Feed; ASCII #12
         ["\r"] = "\\r", -- Carriage-Return; ASCII #13
     }
-    
+
     -- We need to assign all extra normal byte escapes for runtime optimization
     -- ASCII #s 32-126 include all printable characters that AREN'T
     -- in the extended ASCII list, aside from #127, `DEL`. This
@@ -83,7 +83,9 @@ local SerializeString do
     function SerializeString(inputString)
         -- Replace all null bytes, ctrl chars, dbl quotes, literal backslashes,
         -- and bytes 0-31 and 127-255 with their respecive escapes
-        return "\"" .. string.gsub(inputString, "[\"\\\0-\31\127-\255]", SpecialCharacters) .. "\""
+        -- FYI; We can't do "\0-\31" in Lua 5.1 (Only Luau/Lua 5.2+) due to an embedded zeros in pattern
+        -- issue. See: https://stackoverflow.com/a/22962409
+        return "\"" .. string.gsub(inputString, "[\"\\%z\1-\31\127-\255]", SpecialCharacters) .. "\""
     end
 end
 
@@ -198,7 +200,7 @@ local function LuaEncode(inputTable, options)
     -- Set root as visited; cyclic detection
     local VisitedTables = options._VisitedTables or {[inputTable] = true} -- [`visitedTable <table>`] = `isVisited <boolean>`
 
-    -- Stack overflow/output abuse or whatever, default StackLimit is 199
+    -- Stack overflow/output abuse or whatever, default StackLimit is 500
     -- FYI, this is just a very temporary solution for table cyclic refs
     if StackLevel >= StackLimit then
         return string.format("{--[[LuaEncode: Stack level limit of `%d` reached]]}", StackLimit)
@@ -228,6 +230,20 @@ local function LuaEncode(inputTable, options)
             return EncodedValue
         end
 
+        -- For "tuple" args specifically, so there isn't a bunch of re-used code
+        local function Args(...)
+            local EncodedValues = {}
+
+            for _, Arg in {...} do
+                table.insert(EncodedValues, TypeCase(
+                    Type(Arg),
+                    Arg
+                ))
+            end
+
+            return table.concat(EncodedValues, ValueSeperator)
+        end
+
         TypeCases["number"] = function(value, isKey)
             -- If the number isn't the current real index of the table, we DO want to
             -- explicitly define it in the serialization no matter what for accuracy
@@ -237,14 +253,16 @@ local function LuaEncode(inputTable, options)
                 return nil, false
             end
 
-            -- Lua's internal `tostring` handling will denote positive-infinite number TValues as "inf", which
-            -- makes certain numbers not encode properly
-            if value == math.huge then
+            -- Lua's internal `tostring` handling will denote positive/negativie-infinite number TValues as "inf", which
+            -- makes certain numbers not encode properly. We also just want to make the output precise
+            if value == PositiveInf then
                 return "math.huge", true
+            elseif value == NegativeInf then
+                return "-math.huge", true
             end
 
-            -- Fallback to the value's tostring val
-            return tostring(value), true -- True return for 2nd arg means it SHOULD be enclosed with brackets, if it is a key
+            -- Return fixed-formatted precision num
+            return string.format("%.16g", value), true -- True return for 2nd arg means it SHOULD be enclosed with brackets, if it is a key
         end
 
         TypeCases["string"] = function(value, isKey)
@@ -297,7 +315,7 @@ local function LuaEncode(inputTable, options)
 
         TypeCases["function"] = function(value)
             -- If `FunctionsReturnRaw` is set as true, we'll call the function here itself, expecting
-            -- a raw value tFunctionsReturnRawo add as the key/value, you may want to do this for custom userdata or
+            -- a raw value for FunctionsReturnRaw to add as the key/value, you may want to do this for custom userdata or
             -- function closures. Thank's for listening to my Ted Talk!
             if FunctionsReturnRaw then
                 return value(), true
@@ -340,7 +358,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["CFrame"] = function(value)
             return string.format(
                 "CFrame.new(%s)",
-                table.concat({value:components()}, ValueSeperator)
+                Args(value:components())
             ), true
         end
 
@@ -371,7 +389,7 @@ local function LuaEncode(inputTable, options)
             -- Using floats for RGB values, most accurate for direct serialization
             return string.format(
                 "Color3.new(%s)",
-                table.concat({value.R, value.G, value.B}, ValueSeperator)
+                Args(value.R, value.G, value.B)
             ), true
         end
 
@@ -387,18 +405,13 @@ local function LuaEncode(inputTable, options)
         TypeCases["ColorSequenceKeypoint"] = function(value)
             return string.format(
                 "ColorSequenceKeypoint.new(%s)",
-                table.concat(
-                    {
-                        value.Time,
-                        TypeCase("Color3", value.Value),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Time, value.Value)
             ), true
         end
 
         -- DateTime.now()/DateTime.fromUnixTimestamp() | We're using fromUnixTimestamp to serialize the object
         TypeCases["DateTime"] = function(value)
+            -- Always an int, we don't need to do anything special
             return string.format("DateTime.fromUnixTimestamp(%d)", value.UnixTimestamp), true
         end
 
@@ -409,21 +422,18 @@ local function LuaEncode(inputTable, options)
 
             return string.format(
                 "DockWidgetPluginGuiInfo.new(%s)",
-                table.concat(
-                    {
-                        -- InitialDockState (Enum.InitialDockState)
-                        TypeCase("EnumItem", Enum.InitialDockState[string.match(ValueString, "InitialDockState:(%w+)")]), -- Enum.InitialDockState.Right
-                        -- InitialEnabled and InitialEnabledShouldOverrideRestore (boolean as number; `0` or `1`)
-                        TypeCase("boolean", string.match(ValueString, "InitialEnabled:(%w+)") == "1"), -- false
-                        TypeCase("boolean", string.match(ValueString, "InitialEnabledShouldOverrideRestore:(%w+)") == "1"), -- false
-                        -- FloatingXSize/FloatingYSize (numbers)
-                        string.match(ValueString, "FloatingXSize:(%w+)"), -- 0
-                        string.match(ValueString, "FloatingYSize:(%w+)"), -- 0
-                        -- MinWidth/MinHeight (numbers)
-                        string.match(ValueString, "MinWidth:(%w+)"), -- 0
-                        string.match(ValueString, "MinHeight:(%w+)"), -- 0
-                    },
-                    ValueSeperator
+                Args(
+                    -- InitialDockState (Enum.InitialDockState)
+                    Enum.InitialDockState[string.match(ValueString, "InitialDockState:(%w+)")], -- Enum.InitialDockState.Right
+                    -- InitialEnabled and InitialEnabledShouldOverrideRestore (boolean as number; `0` or `1`)
+                    string.match(ValueString, "InitialEnabled:(%w+)") == "1", -- false
+                    string.match(ValueString, "InitialEnabledShouldOverrideRestore:(%w+)") == "1", -- false
+                    -- FloatingXSize/FloatingYSize (numbers)
+                    tonumber(string.match(ValueString, "FloatingXSize:(%w+)")), -- 0
+                    tonumber(string.match(ValueString, "FloatingYSize:(%w+)")), -- 0
+                    -- MinWidth/MinHeight (numbers)
+                    tonumber(string.match(ValueString, "MinWidth:(%w+)")), -- 0
+                    tonumber(string.match(ValueString, "MinHeight:(%w+)")) -- 0
                 )
             ), true
         end
@@ -471,14 +481,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["FloatCurveKey"] = function(value)
             return string.format(
                 "FloatCurveKey.new(%s)",
-                table.concat(
-                    {
-                        value.Time,
-                        value.Value,
-                        TypeCase("EnumItem", value.Interpolation),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Time, value.Value, value.Interpolation)
             ), true
         end
 
@@ -486,14 +489,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Font"] = function(value)
             return string.format(
                 "Font.new(%s)",
-                table.concat(
-                    {
-                        TypeCase("string", value.Family),
-                        TypeCase("EnumItem", value.Weight),
-                        TypeCase("EnumItem", value.Style),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Family, value.Weight, value.Style)
             ), true
         end
 
@@ -516,7 +512,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["NumberRange"] = function(value)
             return string.format(
                 "NumberRange.new(%s)",
-                table.concat({value.Min, value.Max}, ValueSeperator)
+                Args(value.Min, value.Max)
             ), true
         end
 
@@ -532,14 +528,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["NumberSequenceKeypoint"] = function(value)
             return string.format(
                 "NumberSequenceKeypoint.new(%s)",
-                table.concat(
-                    {
-                        value.Time,
-                        value.Value,
-                        value.Envelope,
-                    },
-                    ValueSeperator
-                )
+                Args(value.Time, value.Value, value.Envelope)
             ), true
         end
 
@@ -567,14 +556,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["PathWaypoint"] = function(value)
             return string.format(
                 "PathWaypoint.new(%s)",
-                table.concat(
-                    {
-                        TypeCase("Vector3", value.Position),
-                        TypeCase("EnumItem", value.Action),
-                        TypeCase("string", value.Label),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Position, value.Action, value.Label)
             ), true
         end
 
@@ -582,15 +564,12 @@ local function LuaEncode(inputTable, options)
         TypeCases["PhysicalProperties"] = function(value)
             return string.format(
                 "PhysicalProperties.new(%s)",
-                table.concat(
-                    {
-                        value.Density,
-                        value.Friction,
-                        value.Elasticity,
-                        value.FrictionWeight,
-                        value.ElasticityWeight,
-                    },
-                    ValueSeperator
+                Args(
+                    value.Density,
+                    value.Friction,
+                    value.Elasticity,
+                    value.FrictionWeight,
+                    value.ElasticityWeight
                 )
             ), true
         end
@@ -604,13 +583,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Ray"] = function(value)
             return string.format(
                 "Ray.new(%s)",
-                table.concat(
-                    {
-                        TypeCase("Vector3", value.Origin),
-                        TypeCase("Vector3", value.Direction),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Origin, value.Direction)
             ), true
         end
 
@@ -638,13 +611,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Rect"] = function(value)
             return string.format(
                 "Rect.new(%s)",
-                table.concat(
-                    {
-                        TypeCase("Vector2", value.Min),
-                        TypeCase("Vector2", value.Max),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Min, value.Max)
             ), true
         end
 
@@ -662,13 +629,7 @@ local function LuaEncode(inputTable, options)
 
             return string.format(
                 "Region3.new(%s)",
-                table.concat(
-                    {
-                        TypeCase("Vector3", Minimum.Position), -- min
-                        TypeCase("Vector3", Maximum.Position) -- max
-                    },
-                    ValueSeperator
-                )
+                Args(Minimum.Position, Maximum.Position)
             ), true
         end
 
@@ -676,13 +637,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Region3int16"] = function(value)
             return string.format(
                 "Region3int16.new(%s)",
-                table.concat(
-                    {
-                        TypeCase("Vector3int16", value.Min),
-                        TypeCase("Vector3int16", value.Max),
-                    },
-                    ValueSeperator
-                )
+                Args(value.Min, value.Max)
             ), true
         end
 
@@ -690,16 +645,13 @@ local function LuaEncode(inputTable, options)
         TypeCases["TweenInfo"] = function(value)
             return string.format(
                 "TweenInfo.new(%s)",
-                table.concat(
-                    {
-                        value.Time,
-                        TypeCase("EnumItem", value.EasingStyle),
-                        TypeCase("EnumItem", value.EasingDirection),
-                        value.RepeatCount,
-                        TypeCase("boolean", value.Reverses),
-                        value.DelayTime,
-                    },
-                    ValueSeperator
+                Args(
+                    value.Time,
+                    value.EasingStyle,
+                    value.EasingDirection,
+                    value.RepeatCount,
+                    value.Reverses,
+                    value.DelayTime
                 )
             ), true
         end
@@ -708,14 +660,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["RotationCurveKey"] = function(value)
             return string.format(
                 "RotationCurveKey.new(%s)",
-                table.concat(
-                    {
-                        value.Time,
-                        TypeCase("CFrame", value.Value),
-                        TypeCase("EnumItem", value.Interpolation)
-                    },
-                    ValueSeperator
-                )
+                Args(value.Time, value.Value, value.Interpolation)
             ), true
         end
 
@@ -723,7 +668,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["UDim"] = function(value)
             return string.format(
                 "UDim.new(%s)",
-                table.concat({value.Scale, value.Offset}, ValueSeperator)
+                Args(value.Scale, value.Offset)
             ), true
         end
 
@@ -731,16 +676,13 @@ local function LuaEncode(inputTable, options)
         TypeCases["UDim2"] = function(value)
             return string.format(
                 "UDim2.new(%s)",
-                table.concat(
-                    {
-                        -- Not directly using X and Y UDims for better output (i.e. would
-                        -- be UDim2.new(UDim.new(1, 0), UDim.new(1, 0)) if I did)
-                        value.X.Scale,
-                        value.X.Offset,
-                        value.Y.Scale,
-                        value.Y.Offset,
-                    },
-                    ValueSeperator
+                Args(
+                    -- Not directly using X and Y UDims for better output (i.e. would
+                    -- be UDim2.new(UDim.new(1, 0), UDim.new(1, 0)) if I did)
+                    value.X.Scale,
+                    value.X.Offset,
+                    value.Y.Scale,
+                    value.Y.Offset
                 )
             ), true
         end
@@ -749,7 +691,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Vector2"] = function(value)
             return string.format(
                 "Vector2.new(%s)",
-                table.concat({value.X, value.Y}, ValueSeperator)
+                Args(value.X, value.Y)
             ), true
         end
 
@@ -757,7 +699,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Vector2int16"] = function(value)
             return string.format(
                 "Vector2int16.new(%s)",
-                table.concat({value.X, value.Y}, ValueSeperator)
+                Args(value.X, value.Y)
             ), true
         end
 
@@ -765,7 +707,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Vector3"] = function(value)
             return string.format(
                 "Vector3.new(%s)",
-                table.concat({value.X, value.Y, value.Z}, ValueSeperator)
+                Args(value.X, value.Y, value.Z)
             ), true
         end
 
@@ -773,7 +715,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["Vector3int16"] = function(value)
             return string.format(
                 "Vector3int16.new(%s)",
-                table.concat({value.X, value.Y, value.Z}, ValueSeperator)
+                Args(value.X, value.Y, value.Z)
             ), true
         end
 

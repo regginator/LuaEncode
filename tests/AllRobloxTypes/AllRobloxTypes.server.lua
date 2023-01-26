@@ -81,7 +81,7 @@ Output:
         AssetTypes = {},
         SearchKeyword = ""
     }),
-    Color3.new(0.0941176488995552, 0.1764705926179886, 0.30980393290519714),
+    Color3.new(0.09411764889955521, 0.1764705926179886, 0.3098039329051971),
     ColorSequence.new({
         ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
         ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
