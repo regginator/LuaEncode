@@ -1,5 +1,5 @@
 -- LuaEncode - Optimal Serialization of Lua Tables in Native Luau/Lua 5.1+
--- Copyright (c) 2022 Reggie <reggie@latte.to> | MIT License
+-- Copyright (c) 2022-2023 Reggie <reggie@latte.to> | MIT License
 -- https://github.com/regginator/LuaEncode
 
 local Type = typeof or type -- For custom Roblox engine data-type support via `typeof`, if it exists

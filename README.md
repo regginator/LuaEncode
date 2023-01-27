@@ -233,7 +233,7 @@ ___
 ```txt
 MIT License
 
-Copyright (c) 2022 Reggie <reggie@latte.to>
+Copyright (c) 2022-2023 Reggie <reggie@latte.to>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
