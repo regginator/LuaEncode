@@ -14,7 +14,7 @@ for _, FileName in fs.readDir("tests") do
     end
 end
 
--- Run all modules in each runtimPathe, and format output
+-- Run all modules in each runtime, and format output
 for FileName, Module in Modules do
     print(`------------------- BEGINNING TESTS FOR "{FileName}" -------------------\n`)
 
