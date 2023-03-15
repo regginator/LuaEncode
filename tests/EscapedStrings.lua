@@ -19,8 +19,7 @@ local Table = {
 }
 
 print(LuaEncode(Table, {
-    PrettyPrinting = true,
-    IndentCount = 4
+    Prettify = true,
 }))
 
 --[[

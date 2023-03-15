@@ -1,4 +1,4 @@
-local LuaEncode = require(script.LuaEncode)
+local LuaEncode = require(game:GetService("ReplicatedStorage").MainModule)
 
 local Table = {
     Axes.new(Enum.Axis.X),
@@ -61,8 +61,7 @@ local Table = {
 }
 
 print(LuaEncode(Table, {
-    PrettyPrinting = true,
-    IndentCount = 4,
+    Prettify = true,
 }))
 
 --[=[
@@ -70,7 +69,7 @@ Output:
 
 {
     Axes.new(Enum.Axis.X),
-    BrickColor.new("Pastel Blue"),
+    BrickColor.new("Pastel Blue",
     CFrame.new(12, 67, 90, 1, 0, 0, 0, 1, 0, 0, 0, 1),
     (function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(CatalogSearchParams.new(), {
         BundleTypes = {},
@@ -81,12 +80,12 @@ Output:
         AssetTypes = {},
         SearchKeyword = ""
     }),
-    Color3.new(0.09411764889955521, 0.1764705926179886, 0.3098039329051971),
+    Color3.new(0.094117648899555, 0.17647059261799, 0.3098039329052,
     ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
-        ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1))
+        ColorSequenceKeypoint.new(0, Color3.new(0.0039215688593686, 0.0039215688593686, 0.0039215688593686),
+        ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1)
     }),
-    ColorSequenceKeypoint.new(0, Color3.new(0.003921568859368563, 0.003921568859368563, 0.003921568859368563)),
+    ColorSequenceKeypoint.new(0, Color3.new(0.0039215688593686, 0.0039215688593686, 0.0039215688593686),
     DateTime.fromUnixTimestamp(123456),
     DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, true, false, 150, 150, 100, 100),
     Enum.UserInputType,
@@ -95,7 +94,7 @@ Output:
     Faces.new(Enum.NormalId.Front),
     FloatCurveKey.new(1, 1, Enum.KeyInterpolationMode.Constant),
     Font.new("rbxasset://fonts/families/Arial.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
-    Instance.new("Part"),
+    nil --[[Instance.new("Part")]],
     NumberRange.new(1, 10),
     NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0, 0),
@@ -107,7 +106,7 @@ Output:
         CollisionGroup = "Default",
         FilterDescendantsInstances = {},
         RespectCanCollide = false,
-        FilterType = Enum.RaycastFilterType.Blacklist
+        FilterType = Enum.RaycastFilterType.Exclude
     }),
     PathWaypoint.new(Vector3.new(1, 1, 1), Enum.PathWaypointAction.Walk, ""),
     PhysicalProperties.new(1, 1, 1, 1, 1),
@@ -118,10 +117,10 @@ Output:
         IgnoreWater = false,
         CollisionGroup = "Default",
         FilterDescendantsInstances = {},
-        FilterType = Enum.RaycastFilterType.Blacklist
+        FilterType = Enum.RaycastFilterType.Exclude
     }),
     Rect.new(Vector2.new(1, 1), Vector2.new(2, 2)),
-    Region3.new(Vector3.new(1, 1, 1), Vector3.new(2, 2, 2)),
+    Region3.new(CFrame.new(1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrame.new(2, 2, 2, 1, 0, 0, 0, 1, 0, 0, 0, 1)),
     Region3int16.new(Vector3int16.new(1, 1, 1), Vector3int16.new(1, 1, 1)),
     TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 0, false, 0),
     RotationCurveKey.new(1, CFrame.new(0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), Enum.KeyInterpolationMode.Cubic),

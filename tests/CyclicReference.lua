@@ -4,8 +4,7 @@ local Table = {}
 Table[1] = Table
 
 print(LuaEncode(Table, {
-    PrettyPrinting = true,
-    IndentCount = 4
+    Prettify = true,
 }))
 
 --[=[

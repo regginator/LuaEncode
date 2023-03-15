@@ -1,0 +1,22 @@
+{
+    "name": "LuaEncode",
+    "tree": {
+        "$className": "DataModel",
+
+        "ReplicatedStorage": {
+            "$className": "ReplicatedStorage",
+
+            "MainModule": {
+                "$path": "default.project.json"
+            }
+        },
+
+        "ServerScriptService": {
+            "$className": "ServerScriptService",
+
+            "LuaEncodeTests": {
+                "$path": "tests/RobloxTests"
+            }
+        }
+    }
+}

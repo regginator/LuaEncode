@@ -4,11 +4,9 @@ local Table = {
     foo = "bar",
     baz = {
         1,
-        "one",
-        true,
-        false,
-        [90] = "ninety",
-        ["hi mom"] = "hello world",
+        2,
+        3,
+        [5] = 5,
     },
     qux = function()
         return "\"hi!\""
@@ -16,8 +14,7 @@ local Table = {
 }
 
 local Encoded = LuaEncode(Table, {
-    PrettyPrinting = true, -- `false` by default
-    IndentCount = 4, -- `0` by default
+    Prettify = true, -- `false` by default (when this is true, IndentCount is also 4!)
     FunctionsReturnRaw = true, -- `false` by default
 })
 
@@ -30,11 +27,9 @@ Output:
     qux = "hi!",
     baz = {
         1,
-        "one",
-        true,
-        false,
-        [90] = "ninety",
-        ["hi mom"] = "hello world"
+        2,
+        3,
+        [5] = 5
     },
     foo = "bar"
 }

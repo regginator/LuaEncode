@@ -1,4 +1,4 @@
-local LuaEncode = require(script.LuaEncode)
+local LuaEncode = require(game:GetService("ReplicatedStorage").MainModule)
 
 local function NewInstance(className, properties)
     local CreatedInstance = Instance.new(className)
@@ -42,8 +42,7 @@ local Table = {
 }
 
 print(LuaEncode(Table, {
-    PrettyPrinting = true,
-    IndentCount = 4,
+    Prettify = true,
     UseInstancePaths = true
 }))
 

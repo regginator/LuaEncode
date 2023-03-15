@@ -1,96 +1,82 @@
+<!-- Links -->
+[stars]: https://github.com/regginator/LuaEncode/stargazers
+[fork]: https://github.com/regginator/LuaEncode/fork
+[latest-release]: https://github.com/regginator/LuaEncode/releases/latest
+[license]: https://github.com/regginator/LuaEncode/blob/master/LICENSE.txt
+[commits]: https://github.com/regginator/LuaEncode/commits
+[wally]: https://wally.run/package/regginator/luaencode
+
+[roblox-marketplace]: https://create.roblox.com/marketplace/asset/12791121865/LuaEncode
+[discord]: https://latte.to/discord
+[github]: https://github.com/regginator
+[twitter]: https://twitter.com/jitlua
+
+<!-- Badges -->
+[badges/stars]: https://img.shields.io/github/stars/regginator/LuaEncode?label=Stars&logo=GitHub
+[badges/fork]: https://img.shields.io/github/forks/regginator/LuaEncode?label=Fork&logo=GitHub
+[badges/latest-release]: https://img.shields.io/github/v/release/regginator/LuaEncode?label=Latest%20Release
+[badges/last-modified]: https://img.shields.io/github/last-commit/regginator/LuaEncode?label=Last%20Modifed
+[badges/license]: https://img.shields.io/github/license/regginator/LuaEncode?label=License
+[badges/wally]: https://img.shields.io/badge/wally.run-regginator%2Fluaencode-%23ad4646?style=flat"
+
+<!-- Social icons -->
+[social/roblox-marketplace]: gh-assets/roblox-marketplace-icon.svg
+[social/discord]: gh-assets/discord-icon.svg
+[social/github]: gh-assets/github-icon.svg
+[social/twitter]: gh-assets/twitter-icon.svg
+
 <div align="center">
-    <!-- Title/Desc -->
-    <h1>LuaEncode</h1>
-    <h4>Optimal Serialization of Lua Tables in Native Luau/Lua 5.1+</h4>
-    <p>
-        <!-- PROJECT INFO START -->
-        <!-- Repo stars -->
-        <a href="https://github.com/regginator/LuaEncode/stargazers">
-            <img src="https://img.shields.io/github/stars/regginator/LuaEncode?label=Stars&logo=GitHub" alt="Repo Stars">
-        </a>
-        <!-- Repo forks -->
-        <a href="https://github.com/regginator/LuaEncode/fork">
-            <img src="https://img.shields.io/github/forks/regginator/LuaEncode?label=Fork&logo=GitHub" alt="Repo Forks">
-        </a>
-        <!-- Latest release -->
-        <a href="https://github.com/regginator/LuaEncode/releases/latest">
-            <img src="https://img.shields.io/github/v/release/regginator/LuaEncode?label=Latest%20Release" alt="Latest Release" />
-        </a>
-        <!-- License info -->
-        <a href="https://github.com/regginator/LuaEncode/blob/master/LICENSE.txt">
-            <img src="https://img.shields.io/github/license/regginator/LuaEncode?label=License" alt="License" />
-        </a>
-        <!-- Last modified (latest commit) -->
-        <a href="https://github.com/regginator/LuaEncode/commits">
-            <img src="https://img.shields.io/github/last-commit/regginator/LuaEncode?label=Last%20Modifed" alt="Last Modified" />
-        </a>
-        <!-- Package on wally.run -->
-        <a href="https://wally.run/package/regginator/luaencode">
-            <img src="https://img.shields.io/badge/wally.run-regginator%2Fluaencode-%23ad4646?style=flat" alt="Package on wally.run" />
-        </a>
-        <!-- PROJECT INFO END -->
-        <br />
-        <!-- SOCIAL LINKS START -->
-        <!-- Latte Softworks Discord -->
-        <a href="https://latte.to/invite">
-            <img src="https://img.shields.io/discord/892211155303538748?color=%235865F2&label=Latte%20Softworks&logo=Discord&logoColor=%23FFFFFF" alt="Latte Softworks Discord" />
-        </a>
-        <!-- Twitter (@jitlua) -->
-        <a href="https://twitter.com/jitlua">
-            <img src="https://img.shields.io/twitter/follow/jitlua?color=1d9bf0&label=Follow%20%40jitlua&logo=Twitter&logoColor=ffffff&style=flat" alt="Follow @jitlua (Twitter)" />
-        </a>
-        <!-- GitHub (@regginator) -->
-        <a href="https://github.com/regginator">
-            <img src="https://img.shields.io/github/followers/regginator?label=Follow%20%40regginator&logo=GitHub" alt="Follow @regginator (GitHub)" />
-        </a>
-        <!-- SOCIAL LINKS END -->
-    </p>
+
+# LuaEncode
+
+Optimal Table Serialization for Native Luau/Lua 5.1+
+
+[![Stars][badges/stars]][stars] [![Fork][badges/fork]][fork] [![Latest Release][badges/latest-release]][latest-release] [![Last Modified][badges/last-modified]][commits] [![License][badges/license]][license] [![Wally][badges/wally]][wally]
+
+[![Roblox Marketplace][social/roblox-marketplace]][roblox-marketplace] [![Latte Softworks Discord][social/discord]][discord] [![My GitHub][social/github]][github] [![My Twitter][social/twitter]][twitter]
+
 </div>
 
 ___
 
-## About
+## 🎉 About
 
-This is a fairly simple, user-friendly utility module developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables/data structures. This natively supports both Luau (Vanilla *or* [Roblox](https://roblox.com)), and Lua 5.1+
+LuaEncode is a simple, user-friendly library developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables and data structures. This natively supports both Luau (Vanilla *or* [Roblox](https://roblox.com)'s implementation), and Lua 5.1+
 
-### Features
+### 🌟 Features
 
-* Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for keys/values.
+* Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for key/values.
 * Fast, optimized, and efficient!
 * Flexible and user-friendly API.
-* Pretty-printing and custom indentation.
-* `type()` **and** `typeof()` support for *full* custom Roblox DataType support (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
-* Secure iteration and value reading, so you can also use this with something like user-generated input and "RemoteSpy" scripts.
-* **Built in** duplicate/cyclic detection and [stack limit](#api).
-* Raw keys/values with [`FunctionsReturnRaw`](#api).
+* Pretty-printing and custom indentation configuration.
+* Compatible with *all* custom Roblox DataTypes (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
+* Built with complete, secure iteration and value reading in mind.
+* **Built-in** duplicate/cyclic detection and [stack limit](#api).
+* Raw keys/value input with [`FunctionsReturnRaw`](#api).
 
 ___
 
-## Installation
+## ⚙️ Installation
 
 * ### GitHub Releases
 
-    You can download the [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and immediately use the module!
+    You can download the [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and use the module as desired!
 
 * ### Rojo/Wally
 
     If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import in your `Wally.toml` as a dependency:
 
-  * As a dependency in `Wally.toml`:
-
     ```toml
-    LuaEncode = "regginator/luaencode@1.1.6"
+    LuaEncode = "regginator/luaencode@1.2.0"
     ```
 
-  * Rojo: (Building manually)
+* ### Roblox Marketplace
 
-    ```sh
-    rojo build -o LuaEncode.rbxm
+    You can use the [LuaEncode module on the Roblox Marketplace](https://create.roblox.com/marketplace/asset/12791121865/LuaEncode) directly, and it'll always be updated via its ID:
+
+    ```lua
+    local LuaEncode = require(12791121865)
     ```
-
-* ### Git Submodule
-
-    If you're familiar with [Git Submodules](https://gist.github.com/gitaarik/8735255), you can import the repo into your project as per use case.
 
 * ### Loadstring by Release URL
 
@@ -100,29 +86,20 @@ ___
     local LuaEncode = loadstring(game:HttpGet("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
     ```
 
-    *(Or with HttpService if using the Roblox API)*
-
-    ```lua
-    local HttpService = game:GetService("HttpService")
-    local LuaEncode = loadstring(HttpService:GetAsync("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
-    ```
-
 ___
 
-## Basic Usage
+## 🚀 Basic Usage
 
 ```lua
-local LuaEncode = require("src/LuaEncode")
+local LuaEncode = require("path/to/LuaEncode")
 
 local Table = {
     foo = "bar",
     baz = {
         1,
-        "one",
-        true,
-        false,
-        [90] = "ninety",
-        ["hi mom"] = "hello world",
+        2,
+        3,
+        [5] = 5,
     },
     qux = function()
         return "\"hi!\""
@@ -130,49 +107,52 @@ local Table = {
 }
 
 local Encoded = LuaEncode(Table, {
-    PrettyPrinting = true, -- `false` by default
-    IndentCount = 4, -- `0` by default
+    Prettify = true, -- `false` by default (when this is true, IndentCount is also 4!)
     FunctionsReturnRaw = true, -- `false` by default
 })
 
 print(Encoded)
 ```
 
-Expected Output:
+<details open>
+<summary>Expected Output</summary>
+<br />
+<ul>
 
 ```lua
 {
     qux = "hi!",
     baz = {
         1,
-        "one",
-        true,
-        false,
-        [90] = "ninety",
-        ["hi mom"] = "hello world"
+        2,
+        3,
+        [5] = 5
     },
     foo = "bar"
 }
 ```
 
+</ul>
+</details>
+
 ___
 
-## API
+## 🔨 API
 
 ```lua
-<string> LuaEncode(<table> inputTable, <table?> options)
+LuaEncode(inputTable: {[any]: any}, options: {[string]:any}): string
 ```
 
 ### Options
 
 | Argument           | Type                | Description                         |
 |:-------------------|:--------------------|:------------------------------------|
-| PrettyPrinting     | `<boolean?:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting). |
-| IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. |
+| Prettify     | `<boolean?:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting). |
+| IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. (*Note: If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically.*) |
 | OutputWarnings     | `<boolean?:true>`   | If "warnings" should be placed to the output (as comments); It's recommended to keep this enabled, however this can be disabled at ease. |
 | StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted. |
 | FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
-| UseInstancePaths   | `<boolean?:false>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before. |
+| UseInstancePaths   | `<boolean?:true>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before. |
 
 ___
 
@@ -228,7 +208,7 @@ ___
 
 ___
 
-## License
+## 🏛️ License
 
 ```txt
 MIT License

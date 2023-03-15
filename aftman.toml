@@ -5,4 +5,6 @@
 [tools]
 rojo = "rojo-rbx/rojo@7.2.1"
 wally = "UpliftGames/wally@0.3.1"
+lune = "filiptibell/lune@0.5.6"
+darklua = "seaofvoices/darklua@0.8.0"
 # rojo = "rojo-rbx/rojo@6.2.0"
