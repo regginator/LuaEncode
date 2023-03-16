@@ -670,15 +670,11 @@ local function LuaEncode(inputTable, options)
             elseif OutputWarnings then -- Then `Encoded(Key/Value)OrError` is the error msg
                 -- ^^ Then either the key or value wasn't properly checked or encoded, and there
                 -- was an error we need to log!
-                local ErrorMessage = string_gsub(
-                    string_format(
-                        "LuaEncode: Failed to encode %s of DataType `%s`: %s",
-                        (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value", -- "key/value" for bool type fallback
-                        ValueType,
-                        (not KeyEncodedSuccess and SerializeString(EncodedKeyOrError)) or (not ValueEncodedSuccess and SerializeString(EncodedValueOrError)) or "(Failed to get error message)"
-                    ),
-                    "%[*%]*",
-                    ""
+                local ErrorMessage = string_format(
+                    "LuaEncode: Failed to encode %s of DataType `%s`: %s",
+                    (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value", -- "key/value" for bool type fallback
+                    ValueType,
+                    (not KeyEncodedSuccess and SerializeString(EncodedKeyOrError)) or (not ValueEncodedSuccess and SerializeString(EncodedValueOrError)) or "(Failed to get error message)"
                 )
 
                 EntryOutput = EntryOutput .. CommentBlock(ErrorMessage)
