@@ -25,7 +25,7 @@ local math_huge = math.huge
 local Type = typeof or type
 
 -- Used for checking direct getfield syntax; Lua keywords can't be used as keys without being a str
--- FYI; `continue` is Luau only (in Lua it's actually a global function), but we're including it in
+-- FYI; `continue` is Luau only (in Lua it's actually a global function), but we're including it
 -- here anyway to be safe
 local LuaKeywords do
     local LuaKeywordsArray = {
