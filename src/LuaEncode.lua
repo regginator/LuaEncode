@@ -24,6 +24,27 @@ local math_huge = math.huge
 -- For custom Roblox engine data-type support via `typeof`, if it exists
 local Type = typeof or type
 
+-- Used for checking direct getfield syntax; Lua keywords can't be used as keys without being a str
+-- FYI; `continue` is Luau only (in Lua it's actually a global function), but we're including it in
+-- here anyway to be safe
+local LuaKeywords do
+    local LuaKeywordsArray = {
+        "and", "break", "do", "else",
+        "elseif", "end", "false", "for",
+        "function", "if", "in", "local",
+        "nil", "not", "or", "repeat",
+        "return", "then", "true", "until",
+        "while", "continue"
+    }
+
+    -- We're now setting each keyword str to a weak key, so it's faster at runtime for `SerializeString()`
+    LuaKeywords = setmetatable({}, {__mode = "k"})
+
+    for _, Keyword in next, LuaKeywordsArray do
+        LuaKeywords[Keyword] = true
+    end
+end
+
 -- Lua 5.1 doesn't have table.find
 table_find = table_find or function(inputTable, valueToFind) -- Ignoring the `init` arg, unneeded for us
     for Key, Value in ipairs(inputTable) do
@@ -137,7 +158,7 @@ local EvaluateInstancePath do
             -- ^^ Then we'll use GetService directly, since it's actually a service under the DataModel
 
             currentPath = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. currentPath
-        elseif string_match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
+        elseif not LuaKeywords[ObjectName] and string_match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
             -- ^^ Like the `string` DataType, this means means we can index the name directly in Lua
             -- without an explicit string
             currentPath = "." .. ObjectName .. currentPath
@@ -298,7 +319,7 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["string"] = function(value, isKey)
-            if isKey and string_match(value, "^[A-Za-z_][A-Za-z0-9_]*$") then
+            if isKey and not LuaKeywords[value] and string_match(value, "^[A-Za-z_][A-Za-z0-9_]*$") then
                 -- ^^ Then it's a syntaxically-correct variable, doesn't need explicit string def
                 return value, true
             end
