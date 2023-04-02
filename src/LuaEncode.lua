@@ -1,3 +1,4 @@
+--!nocheck
 -- LuaEncode - Optimal Table Serialization for Native Luau/Lua 5.1+
 -- Copyright (c) 2022-2023 Reggie <reggie@latte.to> | MIT License
 -- https://github.com/regginator/LuaEncode
