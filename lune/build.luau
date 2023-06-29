@@ -33,4 +33,3 @@ Run("darklua process -v src/LuaEncode.lua build/LuaEncode.min.lua")
 
 -- Build models thru Rojo
 Run("rojo build -o build/LuaEncode.rbxm")
-Run("rojo build -o build/LuaEncode.rbxmx")
