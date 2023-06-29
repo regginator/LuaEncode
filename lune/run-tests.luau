@@ -1,5 +1,8 @@
 -- Runs each test for Luau, Lua 5.1, and LuaJIT
 
+local fs = require("@lune/fs")
+local process = require("@lune/process")
+
 local function Run(command: string)
     return process.spawn(command, {}, {
         shell = true,

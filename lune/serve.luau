@@ -1,5 +1,7 @@
 -- Just so the command is slightly quicker for me lol
 
+local process = require("@lune/process")
+
 local function Run(command: string)
     print(`> {command}`)
 

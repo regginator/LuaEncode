@@ -1,5 +1,8 @@
 -- Handles building bins for GH tagged releases
 
+local fs = require("@lune/fs")
+local process = require("@lune/process")
+
 local function Run(command: string)
     print(`> {command}`)
 
