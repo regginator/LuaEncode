@@ -3,8 +3,8 @@
 
 # To add a new tool, add an entry to this table.
 [tools]
-rojo = "rojo-rbx/rojo@7.2.1"
-wally = "UpliftGames/wally@0.3.1"
-lune = "filiptibell/lune@0.6.5"
-darklua = "seaofvoices/darklua@0.8.0"
+rojo = "rojo-rbx/rojo@7.3.0"
+wally = "UpliftGames/wally@0.3.2"
+lune = "filiptibell/lune@0.7.2"
+darklua = "seaofvoices/darklua@0.9.0"
 # rojo = "rojo-rbx/rojo@6.2.0"
