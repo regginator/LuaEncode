@@ -4,7 +4,7 @@
 -- https://github.com/regginator/LuaEncode
 
 -- Localizing certain libraries/variables used throughout for runtime efficiency (not specific to Luau)
-local table, ipairs, string, next, pcall, game, workspace, math, tostring, tonumber, getmetatable = table, ipairs, string, next, pcall, game, workspace, math, tostring, tonumber, getmetatable
+local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable = table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable
 
 local string_format = string.format
 local string_char = string.char
@@ -18,8 +18,6 @@ local table_find = table.find
 local table_concat = table.concat
 local table_clone = table.clone
 local table_insert = table.insert
-
-local math_huge = math.huge
 
 -- For custom Roblox engine data-type support via `typeof`, if it exists
 local Type = typeof or type
@@ -308,9 +306,9 @@ local function LuaEncode(inputTable, options)
 
             -- Lua's internal `tostring` handling will denote positive/negativie-infinite number TValues as "inf", which
             -- makes certain numbers not encode properly. We also just want to make the output precise
-            if value == math_huge then
+            if value == 1/0 then
                 return "math.huge"
-            elseif value == -math_huge then
+            elseif value == -1/0 then
                 return "-math.huge"
             end
 
