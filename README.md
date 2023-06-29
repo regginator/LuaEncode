@@ -72,7 +72,7 @@ ___
 
 * ### Roblox Marketplace
 
-    You can use the [LuaEncode module on the Roblox Marketplace](https://create.roblox.com/marketplace/asset/12791121865/LuaEncode) directly, and it'll always be updated via its ID:
+    You can use the [LuaEncode module on the Roblox Marketplace](https://roblox.com/library/12791121865) directly, and it'll always be updated via its ID:
 
     ```lua
     local LuaEncode = require(12791121865)
