@@ -204,6 +204,11 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]:any}): string
     Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under
     `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before.
 
+    SerializeMathHuge <boolean?:true> | If numbers calculated as "infinite" (or negative-inf)
+    numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just
+    a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported
+    on all target versions.
+
 ]]
 
 local function LuaEncode(inputTable, options)
@@ -220,6 +225,7 @@ local function LuaEncode(inputTable, options)
         CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
         CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
         CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
+        CheckType(options.SerializeMathHuge, "options.SerializeMathHuge", "boolean", "nil")
         
         -- Internal options:
         CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
@@ -236,6 +242,7 @@ local function LuaEncode(inputTable, options)
     local StackLimit = options.StackLimit or 500
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and true) or options.UseInstancePaths
+    local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
 
     -- Internal options:
 
@@ -248,6 +255,10 @@ local function LuaEncode(inputTable, options)
     if StackLevel >= StackLimit then
         return "{--[[LuaEncode: Stack level limit of `" .. StackLimit .. "` reached]]}"
     end
+
+    -- For +/- inf num serialization
+    local PositiveInf = (SerializeMathHuge and "math.huge") or "1/0"
+    local NegativeInf = (SerializeMathHuge and "-math.huge") or "-1/0"
 
     -- Easy-to-reference values for specific args
     local NewEntryString = (Prettify and "\n") or ""
@@ -307,9 +318,9 @@ local function LuaEncode(inputTable, options)
             -- Lua's internal `tostring` handling will denote positive/negativie-infinite number TValues as "inf", which
             -- makes certain numbers not encode properly. We also just want to make the output precise
             if value == 1/0 then
-                return "math.huge"
+                return PositiveInf
             elseif value == -1/0 then
-                return "-math.huge"
+                return NegativeInf
             end
 
             -- Return fixed-formatted precision num
