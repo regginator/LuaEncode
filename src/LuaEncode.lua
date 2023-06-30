@@ -1,7 +1,9 @@
---!nocheck
 -- LuaEncode - Optimal Table Serialization for Native Luau/Lua 5.1+
 -- Copyright (c) 2022-2023 Reggie <reggie@latte.to> | MIT License
 -- https://github.com/regginator/LuaEncode
+
+--!nocheck
+--!optimize 2
 
 -- Localizing certain libraries/variables used throughout for runtime efficiency (not specific to Luau)
 local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable = table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable
@@ -16,7 +18,6 @@ local string_gmatch = string.gmatch
 
 local table_find = table.find
 local table_concat = table.concat
-local table_clone = table.clone
 local table_insert = table.insert
 
 -- For custom Roblox engine data-type support via `typeof`, if it exists
@@ -52,17 +53,6 @@ table_find = table_find or function(inputTable, valueToFind) -- Ignoring the `in
     end
 
     return
-end
-
--- Shallow clone function defaulting to `table.clone()` (only Luau), or manually doing so for Lua 5.1+
-table_clone = table_clone or function(inputTable)
-    local ClonedTable = {}
-
-    for Key, Value in next, inputTable do
-        ClonedTable[Key] = Value
-    end
-
-    return ClonedTable
 end
 
 -- Simple function for directly checking the type on values, with their input, variable name,
@@ -339,8 +329,8 @@ local function LuaEncode(inputTable, options)
                 VisitedTables[value] = true
             end
 
-            -- Shallow clone original options tbl
-            local NewOptions = table_clone(options) do
+            -- *Point index not set by NewOptions to original
+            local NewOptions = setmetatable({}, {__index = options}) do
                 -- Overriding if key because it'd look worse pretty printed in a key
                 NewOptions.Prettify = (isKey and false) or Prettify
 
