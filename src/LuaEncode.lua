@@ -119,8 +119,6 @@ local function CommentBlock(inputString)
     return "--[" .. Padding .. "[" .. inputString .. "]" .. Padding .. "]"
 end
 
--- Evaluating an instances' accessable "path" with just it's ref, and if the root parent is nil/isn't
--- under `game` or `workspace`, returns nil.
 local EvaluateInstancePath do
     -- VERY simple function to get if an object is a service, used in instance path eval
     local function IsService(object)
@@ -135,38 +133,50 @@ local EvaluateInstancePath do
         return false
     end
 
-    function EvaluateInstancePath(object, currentPath)
-        currentPath = currentPath or ""
+    -- Evaluating an instances' accessable "path" with just it's ref, and if the root parent is nil/isn't
+    -- under `game` or `workspace`, returns nil.
+    function EvaluateInstancePath(object)
+        -- "Recursive" eval
+        local ObjectPointer = object
 
-        local ObjectName = object.Name
-        local ObjectClassName = object.ClassName
-        local ObjectParent = object.Parent
-
-        if ObjectParent == game and IsService(object) then
-            -- ^^ Then we'll use GetService directly, since it's actually a service under the DataModel
-
-            currentPath = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. currentPath
-        elseif not LuaKeywords[ObjectName] and string_match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
-            -- ^^ Like the `string` DataType, this means means we can index the name directly in Lua
-            -- without an explicit string
-            currentPath = "." .. ObjectName .. currentPath
-        else
-            currentPath = "[" .. SerializeString(ObjectName) .. "]" .. currentPath
+        -- Input itself doesn't exist?
+        if not ObjectPointer then
+            return
         end
 
-        -- These cases are SPECIFICALLY for getting if the path has reached the "end" of the evaluation
-        -- process, including if the root parent is nil or isn't under the `game` DataModel
-        if not ObjectParent then
-            return -- Fallback, parent is nil etc
-        elseif ObjectParent == game then
-            currentPath = "game" .. currentPath
-            return currentPath
-        elseif ObjectParent == workspace then
-            currentPath = "workspace" .. currentPath
-            return currentPath
+        local Path = ""
+
+        while ObjectPointer do
+            local ObjectName = ObjectPointer.Name
+            local ObjectClassName = ObjectPointer.ClassName
+            local ObjectParent = ObjectPointer.Parent
+
+            if ObjectParent == game and IsService(ObjectPointer) then
+                -- ^^ Then we'll use GetService directly, since it's actually a service under the DataModel
+
+                Path = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. Path
+            elseif not LuaKeywords[ObjectName] and string_match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
+                -- ^^ Like the `string` DataType, this means means we can index the name directly in Lua
+                -- without an explicit string
+                Path = "." .. ObjectName .. Path
+            else
+                Path = "[" .. SerializeString(ObjectName) .. "]" .. Path
+            end
+
+            if ObjectParent == game then
+                Path = "game" .. Path
+                return Path
+            elseif ObjectParent == workspace then
+                Path = "workspace" .. Path
+                return Path
+            end
+
+            -- Advance ObjectPointer, whether it exists or not (JUMPBACK)
+            ObjectPointer = ObjectParent
         end
 
-        return EvaluateInstancePath(ObjectParent, currentPath)
+        -- Fall back to no ret.. Only objects parented under game/workspace will be serialized
+        return
     end
 end
 
