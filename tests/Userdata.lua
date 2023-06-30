@@ -8,12 +8,3 @@ local Table = {
 print(LuaEncode(Table, {
     Prettify = true,
 }))
-
---[[
-Output:
-
-{
-    WithMetatable = newproxy(true),
-    WithoutMetatable = newproxy()
-}
-]]

@@ -24,28 +24,3 @@ local Table = {
 print(LuaEncode(Table, {
     Prettify = true,
 }))
-
---[[
-Output:
-
-{
-    {
-        bye = {
-            "goodbye",
-            2
-        },
-        hi = {
-            "hello",
-            1
-        }
-    },
-    {
-        3,
-        4,
-        5,
-        {
-            6
-        }
-    }
-}
-]]

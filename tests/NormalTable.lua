@@ -19,18 +19,3 @@ local Encoded = LuaEncode(Table, {
 })
 
 print(Encoded)
-
---[[
-Output:
-
-{
-    qux = "hi!",
-    baz = {
-        1,
-        2,
-        3,
-        [5] = 5
-    },
-    foo = "bar"
-}
-]]
