@@ -368,7 +368,7 @@ local function LuaEncode(inputTable, options)
         end
 
         TypeCases["boolean"] = function(value)
-            return tostring(value)
+            return value and "true" or "false"
         end
 
         TypeCases["nil"] = function(value)
