@@ -45,14 +45,14 @@ LuaEncode is a simple, user-friendly library developers can use for **serializat
 
 ### 🌟 Features
 
-* Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for key/values.
-* Fast, optimized, and efficient!
-* Flexible and user-friendly API.
-* Pretty-printing and custom indentation configuration.
-* Compatible with *all* custom Roblox DataTypes (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info.**
-* Built with complete, secure iteration and value reading in mind.
-* **Built-in** duplicate/cyclic detection and [stack limit](#api).
-* Raw keys/value input with [`FunctionsReturnRaw`](#api).
+* Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for key/values
+* Fast, optimized, and efficient
+* Flexible and user-friendly API
+* Pretty-printing and custom indentation configuration
+* Compatible with *all* custom Roblox DataTypes (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info**
+* Built with complete, secure iteration and value reading in mind
+* **Built-in** duplicate/cyclic detection and [stack limit](#api)
+* Raw keys/value input with [`FunctionsReturnRaw`](#api)
 
 ___
 
@@ -60,7 +60,7 @@ ___
 
 * ### GitHub Releases
 
-    You can download the [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and use the module as desired!
+    You can download [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and use the module as desired
 
 * ### Rojo/Wally
 
@@ -76,14 +76,6 @@ ___
 
     ```lua
     local LuaEncode = require(12791121865)
-    ```
-
-* ### Loadstring by Release URL
-
-    If you're using a script utility with direct access to `loadstring()`, you can use the following line to import the module into your project:
-
-    ```lua
-    local LuaEncode = loadstring(game:HttpGet("https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua"))()
     ```
 
 ___
@@ -115,7 +107,7 @@ print(Encoded)
 ```
 
 <details open>
-<summary>Expected Output</summary>
+<summary>Output</summary>
 <br />
 <ul>
 
@@ -140,26 +132,26 @@ ___
 ## 🔨 API
 
 ```lua
-LuaEncode(inputTable: {[any]: any}, options: {[string]:any}): string
+LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 ```
 
 ### Options
 
 | Argument           | Type                | Description                         |
 |:-------------------|:--------------------|:------------------------------------|
-| Prettify     | `<boolean?:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting). |
-| IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry. (*Note: If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically.*) |
-| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be placed to the output (as comments); It's recommended to keep this enabled, however this can be disabled at ease. |
-| StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted. |
-| FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value. |
-| UseInstancePaths   | `<boolean?:true>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before. |
-| SerializeMathHuge  | `<boolean?:true> ` | If numbers calculated as "infinite" (or negative-inf) numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported on all target versions. |
+| Prettify     | `<boolean?:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting) |
+| IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry (*Note: If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically*) |
+| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be placed to the output (as comments); it's recommended to keep this enabled, however it can be disabled at ease |
+| StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted |
+| FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value |
+| UseInstancePaths   | `<boolean?:true>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before |
+| SerializeMathHuge  | `<boolean?:true> ` | If numbers calculated as "infinite" (or negative-inf) numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported on all target versions |
 
 ___
 
 ## Custom Roblox Lua DataType Coverage
 
-*(See [AllRobloxTypes.server.lua](tests/AllRobloxTypes/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
+*(See [AllRobloxTypes.server.lua](tests/RobloxTests/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
 
 ✔ Implemented | ➖ Partially Implemented | ❌ Unimplemented | ⛔ Never
 
