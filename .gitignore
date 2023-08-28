@@ -10,3 +10,6 @@
 
 # Unneeded in src ctrl
 /sourcemap.json
+
+# Misc
+/.vscode
