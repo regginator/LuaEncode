@@ -203,6 +203,8 @@ ___
 
 ## 🏛️ License
 
+See file: [LICENSE](LICENSE)
+
 ```txt
 MIT License
 
