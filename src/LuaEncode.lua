@@ -2,8 +2,8 @@
 -- Copyright (c) 2022-2023 Reggie <reggie@latte.to> | MIT License
 -- https://github.com/regginator/LuaEncode
 
---!nocheck
 --!optimize 2
+--!native
 
 -- Localizing certain libraries/variables used throughout for runtime efficiency (not specific to Luau)
 local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable = table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable

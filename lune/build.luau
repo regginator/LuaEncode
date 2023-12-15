@@ -30,7 +30,7 @@ Copy("src/LuaEncode.lua", "build/LuaEncode.lua")
 
 -- Minify and output LuaEncode.min
 Run("darklua process -v src/LuaEncode.lua build/LuaEncode.min.lua")
-fs.writeFile("build/LuaEncode.min.lua", "--!nocheck\n--!optimize 2\n" .. fs.readFile("build/LuaEncode.min.lua"))
+fs.writeFile("build/LuaEncode.min.lua", "--!nocheck\n--!optimize 2\n--!native\n" .. fs.readFile("build/LuaEncode.min.lua"))
 
 -- Build models thru Rojo
 Run("rojo build -o build/LuaEncode.rbxm")
