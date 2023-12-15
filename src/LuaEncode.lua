@@ -6,7 +6,8 @@
 --!native
 
 -- Localizing certain libraries/variables used throughout for runtime efficiency (not specific to Luau)
-local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable = table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable
+local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable =
+      table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable
 
 local string_format = string.format
 local string_char = string.char
