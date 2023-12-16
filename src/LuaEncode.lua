@@ -126,7 +126,6 @@ local EvaluateInstancePath do
         -- Logically, if an object is actually under a service, that service *has* to already exist, as we've
         -- presumably evaluated to said path
         local FindServiceSuccess, ServiceObject = pcall(game.FindService, game, object.ClassName)
-
         if FindServiceSuccess and ServiceObject then
             return true
         end
