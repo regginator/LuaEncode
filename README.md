@@ -29,7 +29,7 @@
 
 # LuaEncode
 
-Optimal Table Serialization for Native Luau/Lua 5.1+
+Table Serialization Library for Pure Luau/Lua 5.1+
 
 [![Stars][badges/stars]][stars] [![Fork][badges/fork]][fork] [![Latest Release][badges/latest-release]][latest-release] [![Last Modified][badges/last-modified]][commits] [![License][badges/license]][license] [![Wally][badges/wally]][wally]
 
