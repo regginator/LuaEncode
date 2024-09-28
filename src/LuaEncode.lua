@@ -1,11 +1,11 @@
--- LuaEncode - Optimal Table Serialization for Native Luau/Lua 5.1+
+-- LuaEncode - Table Serialization Library for Pure Luau/Lua 5.1+
 -- Copyright (c) 2022-2023 Reggie <reggie@latte.to> | MIT License
 -- https://github.com/regginator/LuaEncode
 
 --!optimize 2
 --!native
 
--- Localizing certain libraries/variables used throughout for runtime efficiency (not specific to Luau)
+-- Localizing certain libraries/variables used throughout for efficiency (not specific to Luau)
 local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable =
       table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable
 
