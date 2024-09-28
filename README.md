@@ -1,19 +1,12 @@
 <!-- Links -->
-[stars]: https://github.com/regginator/LuaEncode/stargazers
-[fork]: https://github.com/regginator/LuaEncode/fork
 [latest-release]: https://github.com/regginator/LuaEncode/releases/latest
 [license]: https://github.com/regginator/LuaEncode/blob/master/LICENSE.txt
 [commits]: https://github.com/regginator/LuaEncode/commits
 [wally]: https://wally.run/package/regginator/luaencode
 
 [roblox-marketplace]: https://create.roblox.com/marketplace/asset/12791121865/LuaEncode
-[discord]: https://latte.to/discord
-[github]: https://github.com/regginator
-[twitter]: https://twitter.com/jitlua
 
 <!-- Badges -->
-[badges/stars]: https://img.shields.io/github/stars/regginator/LuaEncode?label=Stars&logo=GitHub
-[badges/fork]: https://img.shields.io/github/forks/regginator/LuaEncode?label=Fork&logo=GitHub
 [badges/latest-release]: https://img.shields.io/github/v/release/regginator/LuaEncode?label=Latest%20Release
 [badges/last-modified]: https://img.shields.io/github/last-commit/regginator/LuaEncode?label=Last%20Modifed
 [badges/license]: https://img.shields.io/github/license/regginator/LuaEncode?label=License
@@ -21,50 +14,37 @@
 
 <!-- Social icons -->
 [social/roblox-marketplace]: gh-assets/roblox-marketplace-icon.svg
-[social/discord]: gh-assets/discord-icon.svg
-[social/github]: gh-assets/github-icon.svg
-[social/twitter]: gh-assets/twitter-icon.svg
-
-<div align="center">
 
 # LuaEncode
 
 Table Serialization Library for Pure Luau/Lua 5.1+
 
-[![Stars][badges/stars]][stars] [![Fork][badges/fork]][fork] [![Latest Release][badges/latest-release]][latest-release] [![Last Modified][badges/last-modified]][commits] [![License][badges/license]][license] [![Wally][badges/wally]][wally]
+[![Latest Release][badges/latest-release]][latest-release] [![Last Modified][badges/last-modified]][commits] [![License][badges/license]][license] [![Wally][badges/wally]][wally]
 
-[![Roblox Marketplace][social/roblox-marketplace]][roblox-marketplace] [![Latte Softworks Discord][social/discord]][discord] [![My GitHub][social/github]][github] [![My Twitter][social/twitter]][twitter]
-
-</div>
+[![Roblox Marketplace][social/roblox-marketplace]][roblox-marketplace] 
 
 ___
 
 ## 🎉 About
 
-LuaEncode is a simple, user-friendly library developers can use for **serialization** of [Luau](https://luau-lang.org)/[Lua](https://lua.org) tables and data structures. This natively supports both Luau (Vanilla *or* [Roblox](https://roblox.com)'s implementation), and Lua 5.1+
+LuaEncode is a simple library for **serialization** of Lua tables and data structures. This natively supports both Luau (Vanilla *or* Roblox's implementation), and Lua 5.1+
 
 ### 🌟 Features
 
-* Full serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for key/values
-* Fast, optimized, and efficient
-* Flexible and user-friendly API
-* Pretty-printing and custom indentation configuration
-* Compatible with *all* custom Roblox DataTypes (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - **See [Custom Roblox Lua DataType Coverage](#custom-roblox-lua-datatype-coverage) for more info**
+* Serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for key/values
+* Pretty-printing and custom indentation config
+* Compatible with custom Roblox DataTypes (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - See **[Custom Roblox DataType Coverage](#custom-roblox-datatype-coverage)** for more info
 * Built with complete, secure iteration and value reading in mind
-* **Built-in** duplicate/cyclic detection and [stack limit](#api)
-* Raw keys/value input with [`FunctionsReturnRaw`](#api)
+* Cycle detection and [stack limit](#api)
+* Raw key/value input with [`FunctionsReturnRaw`](#api)
 
 ___
 
 ## ⚙️ Installation
 
-* ### GitHub Releases
-
-    You can download [`LuaEncode.lua`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.lua) or [`LuaEncode.rbxm`](https://github.com/regginator/LuaEncode/releases/latest/download/LuaEncode.rbxm) module for the [latest GitHub release](https://github.com/regginator/LuaEncode/releases/latest), and use the module as desired
-
 * ### Rojo/Wally
 
-    If you're familiar with [Rojo](https://rojo.space) or [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import in your `Wally.toml` as a dependency:
+    If you're familiar with [Rojo](https://rojo.space) and [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import the package in your `wally.toml` as a dependency:
 
     ```toml
     LuaEncode = "regginator/luaencode@1.3.1"
@@ -72,11 +52,7 @@ ___
 
 * ### Roblox Marketplace
 
-    You can use the [LuaEncode module on the Roblox Marketplace](https://roblox.com/library/12791121865) directly, and it'll always be updated via its ID:
-
-    ```lua
-    local LuaEncode = require(12791121865)
-    ```
+    You can also grab the LuaEncode module from the Roblox Marketplace directly: <https://roblox.com/library/1279112186>
 
 ___
 
@@ -99,8 +75,8 @@ local Table = {
 }
 
 local Encoded = LuaEncode(Table, {
-    Prettify = true, -- `false` by default (when this is true, IndentCount is also 4!)
-    FunctionsReturnRaw = true, -- `false` by default
+    Prettify = true, -- false by default (when this is true, IndentCount is also 4!)
+    FunctionsReturnRaw = true, -- false by default
 })
 
 print(Encoded)
@@ -149,7 +125,7 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 
 ___
 
-## Custom Roblox Lua DataType Coverage
+## Custom Roblox DataType Coverage
 
 *(See [AllRobloxTypes.server.lua](tests/RobloxTests/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
 
