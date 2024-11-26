@@ -1,15 +1,13 @@
-# Rojo Build
 /build
 /*.rbxm
 /*.rbxmx
 /*.rbxl
 /*.rbxlx
 
-# No need for wally.lock, LuaEncode doesn't need any 3rd party modules
-/wally.lock
-
-# Unneeded in src ctrl
 /sourcemap.json
+
+# LuaEncode doesn't use any 3rd party modules
+/wally.lock
 
 # Misc
 /.vscode

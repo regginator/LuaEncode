@@ -115,13 +115,13 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 
 | Argument           | Type                | Description                         |
 |:-------------------|:--------------------|:------------------------------------|
-| Prettify     | `<boolean?:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting) |
-| IndentCount        | `<number?:0>`       | The amount of "spaces" that should be indented per entry (*Note: If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically*) |
-| OutputWarnings     | `<boolean?:true>`   | If "warnings" should be placed to the output (as comments); it's recommended to keep this enabled, however it can be disabled at ease |
-| StackLimit         | `<number?:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted |
-| FunctionsReturnRaw | `<boolean?:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value |
-| UseInstancePaths   | `<boolean?:true>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before |
-| SerializeMathHuge  | `<boolean?:true> ` | If numbers calculated as "infinite" (or negative-inf) numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported on all target versions |
+| Prettify           | `<boolean:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting) |
+| IndentCount        | `<number:0>`       | The amount of "spaces" that should be indented per entry (*Note: If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically*) |
+| OutputWarnings     | `<boolean:true>`   | If "warnings" should be placed to the output (as comments); it's recommended to keep this enabled, however it can be disabled at ease |
+| StackLimit         | `<number:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted |
+| FunctionsReturnRaw | `<boolean:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value |
+| UseInstancePaths   | `<boolean:true>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before |
+| SerializeMathHuge  | `<boolean:true> ` | If numbers calculated as "infinite" (or negative-inf) numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported on all target versions |
 
 ___
 
