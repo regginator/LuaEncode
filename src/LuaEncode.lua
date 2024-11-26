@@ -665,25 +665,27 @@ local function LuaEncode(inputTable, options)
         local ValueType = Type(Value)
 
         if TypeCases[KeyType] and TypeCases[ValueType] then
-            local EntryOutput = (Prettify and {NewEntryString, IndentString}) or {}
-            local ValueWasEncoded = false -- Keeping track of this for adding a "," to the EntryOutput if needed
+            if Prettify then
+                Output[#Output+1] = NewEntryString .. IndentString
+            end
 
-            -- Go through and get key val
+            local ValueWasEncoded = false -- Keeping track of this for adding a "," to the output if needed
+
+            -- Evaluate output for key
             local KeyEncodedSuccess, EncodedKeyOrError, DontEncloseInBrackets = pcall(TypeCases[KeyType], Key, true) -- The `true` represents if it's a key or not, here it is
 
-            -- Ignoring 2nd arg (`DontEncloseInBrackets`) because this isn't the key
+            -- Evaluate output for value, ignoring 2nd arg (`DontEncloseInBrackets`) because this isn't the key
             local ValueEncodedSuccess, EncodedValueOrError = pcall(TypeCases[ValueType], Value, false) -- `false` because it's NOT the key, it's the value
 
-            -- Im sorry for this logic chain here, I can't use `continue`/`continue()`.. :sob:
             -- Ignoring `if EncodedKeyOrError` because the key doesn't actually need to ALWAYS
             -- be explicitly encoded, like if it's a number of the current key index!
             if KeyEncodedSuccess and ValueEncodedSuccess and EncodedValueOrError then
-                -- NOW we'll check for if the key was explicitly encoded, because we don't to stop
+                -- NOW we'll check for if the key was explicitly encoded, because we don't want to stop
                 -- the value from encoding, since we've already checked that and it *has* been
                 local KeyValue = EncodedKeyOrError and ((DontEncloseInBrackets and EncodedKeyOrError) or string_format("[%s]", EncodedKeyOrError)) .. ((Prettify and " = ") or "=") or ""
 
                 -- Encode key/value together, we've already checked if `EncodedValueOrError` was returned
-                EntryOutput[#EntryOutput+1] = table.concat({KeyValue, EncodedValueOrError})
+                Output[#Output+1] = table.concat({KeyValue, EncodedValueOrError})
                 ValueWasEncoded = true
             elseif OutputWarnings then -- Then `Encoded(Key/Value)OrError` is the error msg
                 -- ^^ Then either the key or value wasn't properly checked or encoded, and there
@@ -695,19 +697,17 @@ local function LuaEncode(inputTable, options)
                     (not KeyEncodedSuccess and SerializeString(EncodedKeyOrError)) or (not ValueEncodedSuccess and SerializeString(EncodedValueOrError)) or "(Failed to get error message)"
                 )
 
-                EntryOutput[#EntryOutput+1] = CommentBlock(ErrorMessage)
+                Output[#Output+1] = CommentBlock(ErrorMessage)
             end
 
             if next(inputTable, Key) == nil then
                 -- If there isn't another value after the current index, add ending formatting
-                EntryOutput[#EntryOutput+1] = NewEntryString .. EndingIndentString
+                Output[#Output+1] = NewEntryString .. EndingIndentString
             else
                 if ValueWasEncoded then
-                    EntryOutput[#EntryOutput+1] = ","
+                    Output[#Output+1] = ","
                 end
             end
-
-            Output[#Output+1] = table.concat(EntryOutput)
         end
     end
 
