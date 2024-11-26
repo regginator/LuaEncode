@@ -649,7 +649,7 @@ local function LuaEncode(inputTable, options)
 
         -- With userdata, just encode directly
         TypeCases["userdata"] = function(value)
-            if getmetatable(value) then -- Has mt
+            if getmetatable(value) ~= nil then -- Has mt
                 return "newproxy(true)"
             else
                 return "newproxy()" -- newproxy() defaults to false (no mt)
@@ -698,15 +698,13 @@ local function LuaEncode(inputTable, options)
                 EntryOutput[#EntryOutput+1] = CommentBlock(ErrorMessage)
             end
 
-            -- If there isn't another value after the current index, add ending formatting
-            if next(inputTable, Key) then
-                -- Yes.. The nesting here is deliberate
+            if next(inputTable, Key) == nil then
+                -- If there isn't another value after the current index, add ending formatting
+                EntryOutput[#EntryOutput+1] = NewEntryString .. EndingIndentString
+            else
                 if ValueWasEncoded then
                     EntryOutput[#EntryOutput+1] = ","
                 end
-            else
-                -- If there isn't another value after the current index, add ending formatting
-                EntryOutput[#EntryOutput+1] = NewEntryString .. EndingIndentString
             end
 
             Output[#Output+1] = table.concat(EntryOutput)
