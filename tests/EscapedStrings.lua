@@ -1,4 +1,5 @@
-local LuaEncode = require("src/LuaEncode")
+--!nocheck
+local LuaEncode = string.sub(_VERSION, 1, 4) == "Luau" and require("../src/LuaEncode") or require("src/LuaEncode")
 
 local Table = {
     "\"",
@@ -12,10 +13,9 @@ local Table = {
     "\r",
     "\0\1\2\3\4\5\6\7\8\9\10\11\12\13",
     "\127\175",
-    "\29", -- 0x1D real..
-    "hello, \"world\"! i love null bytes like \0, and characters like \b really screw with the console.. \n\n\nnewline moment??",
-    "what is \"roblox\"?\n\nyep",
-    "let's be frienz! 😀 😃 😄 😁 😆 😅 😂 🤣 🥲 🥹 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒"
+    "\29",
+    "hello, \"world\"! \\0 == \0, \\b == \b, \\n == \n",
+    "😀 😃 😄 😁 😆 😅 😂 🤣 🥲 🥹 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 😏 😒"
 }
 
 print(LuaEncode(Table, {

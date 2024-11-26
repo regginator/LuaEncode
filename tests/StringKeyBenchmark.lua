@@ -1,4 +1,5 @@
-local LuaEncode = require("src/LuaEncode")
+--!nocheck
+local LuaEncode = string.sub(_VERSION, 1, 4) == "Luau" and require("../src/LuaEncode") or require("src/LuaEncode")
 
 local Table = {}
 for Index = 1, 100 do
