@@ -1,11 +1,10 @@
 -- LuaEncode - Table Serialization Library for Pure Luau/Lua 5.1+
--- Copyright (c) 2022-2023 Reggie <reggie@latte.to> | MIT License
+-- Copyright (c) 2022-2023 reggie@latte.to | MIT License
 -- https://github.com/regginator/LuaEncode
 
 --!optimize 2
 --!native
 
--- Localizing certain libraries/variables used throughout for efficiency (not specific to Luau)
 local table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable =
       table, ipairs, string, next, pcall, game, workspace, tostring, tonumber, getmetatable
 
@@ -21,12 +20,10 @@ local table_find = table.find
 local table_concat = table.concat
 local table_insert = table.insert
 
--- For custom Roblox engine data-type support via `typeof`, if it exists
 local Type = typeof or type
 
 -- Used for checking direct getfield syntax; Lua keywords can't be used as keys without being a str
--- FYI; `continue` is Luau only (in Lua it's actually a global function), but we're including it
--- here anyway to be safe
+-- FYI; `continue` is Luau only (in Lua it's actually a global function)
 local LuaKeywords do
     local LuaKeywordsArray = {
         "and", "break", "do", "else",
@@ -37,9 +34,8 @@ local LuaKeywords do
         "while", "continue"
     }
 
-    -- We're now setting each keyword str to a weak key, so it's faster at runtime for `SerializeString()`
-    LuaKeywords = setmetatable({}, {__mode = "k"})
-
+    -- Lookup table for each keyword
+    LuaKeywords = {}
     for _, Keyword in next, LuaKeywordsArray do
         LuaKeywords[Keyword] = true
     end
@@ -49,7 +45,7 @@ end
 table_find = table_find or function(inputTable, valueToFind) -- Ignoring the `init` arg, unneeded for us
     for Key, Value in ipairs(inputTable) do
         if Value == valueToFind then
-            return Key -- Return the key idx
+            return Key
         end
     end
 
@@ -77,19 +73,18 @@ end
 -- This re-serializes a string back into Lua, for the interpreter AND humans to read. This fixes
 -- `string_format("%q")` only outputting in system encoding, instead of explicit Lua byte escapes
 local SerializeString do
-    -- These are control characters to be encoded in a certain way in Lua rather than just a byte
-    -- escape (e.g. "\n" -> "\10")
+    -- These are control characters to be encoded in a certain way in Lua rather than just a byte escape
     local SpecialCharacters = {
-        ["\""] = "\\\"", -- Double-Quote
-        ["\\"] = "\\\\", -- (Literal) Backslash
+        ["\""] = "\\\"",
+        ["\\"] = "\\\\",
         -- Special ASCII control char codes
-        ["\a"] = "\\a", -- Bell; ASCII #7
-        ["\b"] = "\\b", -- Backspace; ASCII #8
-        ["\t"] = "\\t", -- Horizontal-Tab; ASCII #9
-        ["\n"] = "\\n", -- Newline; ASCII #10
-        ["\v"] = "\\v", -- Vertical-Tab; ASCII #11
-        ["\f"] = "\\f", -- Form-Feed; ASCII #12
-        ["\r"] = "\\r", -- Carriage-Return; ASCII #13
+        ["\a"] = "\\a",
+        ["\b"] = "\\b",
+        ["\t"] = "\\t",
+        ["\n"] = "\\n",
+        ["\v"] = "\\v",
+        ["\f"] = "\\f",
+        ["\r"] = "\\r",
     }
 
     -- We need to assign all extra normal byte escapes for runtime optimization
@@ -104,11 +99,11 @@ local SerializeString do
     function SerializeString(inputString)
         -- FYI; We can't do "\0-\31" in Lua 5.1 (Only Luau/Lua 5.2+) due to an embedded zeros in pattern
         -- issue. See: https://stackoverflow.com/a/22962409
-        return "\"" .. string_gsub(inputString, "[%z\\\"\1-\31\127-\255]", SpecialCharacters) .. "\""
+        return table_concat({ '"', string_gsub(inputString, "[%z\\\"\1-\31\127-\255]", SpecialCharacters), '"' })
     end
 end
 
--- We need to occasionally construct valid comment blocks from external input, with proper escapes etc
+-- Escape warning messages and such for comment block inserts
 local function CommentBlock(inputString)
     local Padding = ""
     for Match in string_gmatch(inputString, "%](=*)%]") do
@@ -121,7 +116,6 @@ local function CommentBlock(inputString)
 end
 
 local EvaluateInstancePath do
-    -- VERY simple function to get if an object is a service, used in instance path eval
     local function IsService(object)
         -- Logically, if an object is actually under a service, that service *has* to already exist, as we've
         -- presumably evaluated to said path
@@ -133,10 +127,9 @@ local EvaluateInstancePath do
         return false
     end
 
-    -- Evaluating an instances' accessable "path" with just it's ref, and if the root parent is nil/isn't
+    -- Evaluates an instances' accessable "path" with just it's ref, and if the root parent is nil/isn't
     -- under `game` or `workspace`, returns nil.
     function EvaluateInstancePath(object)
-        -- "Recursive" eval
         local ObjectPointer = object
 
         -- Input itself doesn't exist?
@@ -185,26 +178,26 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 
     ---------- OPTIONS: ----------
 
-    Prettify <boolean?:false> | Whether or not the output should use pretty printing
+    Prettify <boolean:false> | Whether or not the output should use pretty printing
 
-    IndentCount <number?:0> | The amount of "spaces" that should be indented per entry (*Note:
+    IndentCount <number:0> | The amount of "spaces" that should be indented per entry (*Note:
     If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically*)
 
-    OutputWarnings <boolean?:true> | If "warnings" should be placed to the output (as
+    OutputWarnings <boolean:true> | If "warnings" should be placed to the output (as
     comments); It's recommended to keep this enabled, however this can be disabled at ease
 
-    StackLimit <number?:500> | The limit to the stack level before recursive encoding cuts
+    StackLimit <number:500> | The limit to the stack level before recursive encoding cuts
     off, and stops execution. This is used to prevent stack overflow errors and such. You
     could use `math.huge` here if you really wanted
 
-    FunctionsReturnRaw <boolean?:false> | If functions in said table return back a "raw"
+    FunctionsReturnRaw <boolean:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value
 
-    UseInstancePaths <boolean?:true> | If `Instance` reference objects should return their
+    UseInstancePaths <boolean:true> | If `Instance` reference objects should return their
     Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under
     `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before
 
-    SerializeMathHuge <boolean?:true> | If numbers calculated as "infinite" (or negative-inf)
+    SerializeMathHuge <boolean:true> | If numbers calculated as "infinite" (or negative-inf)
     numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just
     a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported
     on all target versions
@@ -212,27 +205,24 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 ]]
 
 local function LuaEncode(inputTable, options)
-    -- Check all arg and option types
-    CheckType(inputTable, "inputTable", "table") -- Required*, nil not allowed
-    CheckType(options, "options", "table", "nil") -- `options` is an optional arg
-
-    -- Options
-    if options then
-        CheckType(options.Prettify, "options.Prettify", "boolean", "nil")
-        CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil") -- Alias for `Options.Prettify`
-        CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
-        CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
-        CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
-        CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
-        CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
-        CheckType(options.SerializeMathHuge, "options.SerializeMathHuge", "boolean", "nil")
-        
-        -- Internal options:
-        CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
-        CheckType(options._VisitedTables, "options._StackLevel", "table", "nil")
-    end
-
     options = options or {}
+
+    -- Check main args
+    CheckType(inputTable, "inputTable", "table")
+    CheckType(options, "options", "table")
+
+    -- Check options
+    CheckType(options.Prettify, "options.Prettify", "boolean", "nil")
+    CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil") -- Alias for `Options.Prettify`
+    CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
+    CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
+    CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
+    CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
+    CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
+    CheckType(options.SerializeMathHuge, "options.SerializeMathHuge", "boolean", "nil")
+    
+    CheckType(options._StackLevel, "options._StackLevel", "number", "nil")
+    CheckType(options._VisitedTables, "options._StackLevel", "table", "nil")
 
     -- Because no if-else-then exp. in Lua 5.1+ (only Luau), for optional boolean values we need to check
     -- if it's nil first, THEN fall back to whatever it's actually set to if it's not nil
@@ -246,27 +236,25 @@ local function LuaEncode(inputTable, options)
 
     -- Internal options:
 
-    -- Internal stack level for depth checks and indenting
+    -- Stack level for depth checks and indenting
     local StackLevel = options._StackLevel or 1
-    -- Set root as visited; cyclic detection
-    local VisitedTables = options._VisitedTables or {[inputTable] = true} -- [`visitedTable <table>`] = `isVisited <boolean>`
+    -- Set root as visited; cycle detection
+    local VisitedTables = options._VisitedTables or {[inputTable] = true} -- [visitedTable] = isVisited
 
     -- Stack overflow/output abuse etc; default StackLimit is 500
     if StackLevel >= StackLimit then
-        return "{--[[LuaEncode: Stack level limit of `" .. StackLimit .. "` reached]]}"
+        return "{--[[LuaEncode: Stack level limit of " .. StackLimit .. " reached]]}"
     end
 
-    -- For +/- inf num serialization
+    -- Lazy serialization reference values
     local PositiveInf = (SerializeMathHuge and "math.huge") or "1/0"
     local NegativeInf = (SerializeMathHuge and "-math.huge") or "-1/0"
-
-    -- Easy-to-reference values for specific args
     local NewEntryString = (Prettify and "\n") or ""
     local ValueSeperator = (Prettify and ", ") or ","
     local BlankSeperator = (Prettify and " ") or ""
 
-    -- For pretty printing (which is optional, and false by default) we need to keep track
-    -- of the current stack, then repeat IndentString by that count
+    -- For pretty printing (which is optional) we need to keep track of the current stack level, then
+    -- repeat IndentString by that count
     local IndentString = string_rep(" ", IndentCount) -- If 0 this will just be ""
     IndentString = (Prettify and string_rep(IndentString, StackLevel)) or IndentString
 
@@ -275,8 +263,7 @@ local function LuaEncode(inputTable, options)
     -- For number key values, incrementing the current internal index
     local KeyIndex = 1
 
-    -- Cases (C-Like) for encoding values, then end setup. Using cases so no elseif bs!
-    -- Functions are all expected to return a (<string> EncodedKey, <boolean?> EncloseInBrackets)
+    -- Cases for encoding values, then end setup. Functions are all expected to return a (EncodedKey: string, EncloseInBrackets: boolean)
     local TypeCases = {} do
         -- Basic func for getting the direct value of an encoded type without weird table.pack()[1] syntax
         local function TypeCase(typeName, value)
@@ -474,7 +461,7 @@ local function LuaEncode(inputTable, options)
 
         -- e.g. `Enum.UserInputType`
         TypeCases["Enum"] = function(value)
-            return "Enum." .. tostring(value) -- For now, this is the behavior of enums in tostring.. I have no other choice atm
+            return "Enum." .. tostring(value)
         end
 
         -- e.g. `Enum.UserInputType.Gyro`
@@ -670,15 +657,15 @@ local function LuaEncode(inputTable, options)
         end
     end
 
-    -- Setup output tbl
-    local Output = ""
+    -- Setup for final output, which will be concat together
+    local Output = {}
 
     for Key, Value in next, inputTable do
         local KeyType = Type(Key)
         local ValueType = Type(Value)
 
         if TypeCases[KeyType] and TypeCases[ValueType] then
-            local EntryOutput = (Prettify and NewEntryString .. IndentString) or ""
+            local EntryOutput = (Prettify and {NewEntryString, IndentString}) or {}
             local ValueWasEncoded = false -- Keeping track of this for adding a "," to the EntryOutput if needed
 
             -- Go through and get key val
@@ -696,7 +683,7 @@ local function LuaEncode(inputTable, options)
                 local KeyValue = EncodedKeyOrError and ((DontEncloseInBrackets and EncodedKeyOrError) or string_format("[%s]", EncodedKeyOrError)) .. ((Prettify and " = ") or "=") or ""
 
                 -- Encode key/value together, we've already checked if `EncodedValueOrError` was returned
-                EntryOutput = EntryOutput .. KeyValue .. EncodedValueOrError
+                EntryOutput[#EntryOutput+1] = table.concat({KeyValue, EncodedValueOrError})
                 ValueWasEncoded = true
             elseif OutputWarnings then -- Then `Encoded(Key/Value)OrError` is the error msg
                 -- ^^ Then either the key or value wasn't properly checked or encoded, and there
@@ -708,26 +695,25 @@ local function LuaEncode(inputTable, options)
                     (not KeyEncodedSuccess and SerializeString(EncodedKeyOrError)) or (not ValueEncodedSuccess and SerializeString(EncodedValueOrError)) or "(Failed to get error message)"
                 )
 
-                EntryOutput = EntryOutput .. CommentBlock(ErrorMessage)
+                EntryOutput[#EntryOutput+1] = CommentBlock(ErrorMessage)
             end
 
             -- If there isn't another value after the current index, add ending formatting
             if next(inputTable, Key) then
                 -- Yes.. The nesting here is deliberate
                 if ValueWasEncoded then
-                    EntryOutput = EntryOutput .. ","
+                    EntryOutput[#EntryOutput+1] = ","
                 end
             else
                 -- If there isn't another value after the current index, add ending formatting
-                EntryOutput = EntryOutput .. NewEntryString .. EndingIndentString
+                EntryOutput[#EntryOutput+1] = NewEntryString .. EndingIndentString
             end
 
-            Output = Output .. EntryOutput
+            Output[#Output+1] = table.concat(EntryOutput)
         end
     end
 
-    Output = "{" .. Output .. "}"
-    return Output
+    return table.concat(Output)
 end
 
 return LuaEncode
