@@ -25,7 +25,6 @@ end
 
 fs.writeDir("build")
 
-Copy("LICENSE", "build/LICENSE")
 Copy("src/LuaEncode.lua", "build/LuaEncode.lua")
 
 -- Minify and output LuaEncode.min
