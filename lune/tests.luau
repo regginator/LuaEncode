@@ -6,6 +6,7 @@ local process = require("@lune/process")
 local function Run(command: string)
     return process.spawn(command, {}, {
         shell = true,
+        stdio = "inherit",
     })
 end
 
@@ -28,14 +29,9 @@ for FileName, Module in Modules do
     }
 
     for _, Command in Commands do
-        print(`    > {Command}`)
-        local Result = Run(Command)
+        print(`  > {Command}`)
+        Run(Command)
 
-        local NewOutput = ""
-        for _, Line in string.split(Result.stdout .. "\n" .. Result.stderr, "\n") do
-            NewOutput ..= "    " .. Line .. "\n"
-        end
-
-        print(NewOutput)
+        print("\n")
     end
 end
