@@ -32,7 +32,7 @@ for FileName, Module in Modules do
         local Result = Run(Command)
 
         local NewOutput = ""
-        for _, Line in string.split(Result.stdout, "\n") do
+        for _, Line in string.split(Result.stdout .. "\n" .. Result.stderr, "\n") do
             NewOutput ..= "    " .. Line .. "\n"
         end
 
