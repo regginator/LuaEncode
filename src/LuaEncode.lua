@@ -217,7 +217,7 @@ local function LuaEncode(inputTable, options)
     CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
     CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
     --CheckType(options.CycleInserts, "options.CycleInserts", "boolean", "nil")
-    CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
+    --CheckType(options.StackLimit, "options.StackLimit", "number", "nil")
     CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
     CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
     CheckType(options.SerializeMathHuge, "options.SerializeMathHuge", "boolean", "nil")
@@ -230,20 +230,22 @@ local function LuaEncode(inputTable, options)
     local IndentCount = options.IndentCount or (Prettify and 4) or 0
     local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
     --local CycleInserts = (options.CycleInserts == nil and false) or options.CycleInserts
-    local StackLimit = options.StackLimit or 500
+    --local StackLimit = options.StackLimit or 500
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and true) or options.UseInstancePaths
     local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
 
     -- Internal options:
 
-    -- Stack level for depth checks and indenting
+    -- Stack level for indent formatting
     local StackLevel = options._StackLevel or 1
 
+    --[=[
     -- Stack overflow/output abuse etc; default StackLimit is 500
     if StackLevel >= StackLimit then
         return "{--[[LuaEncode: Stack level limit of " .. StackLimit .. " reached]]}"
     end
+    ]=]
 
     -- Lazy serialization reference values
     local PositiveInf = (SerializeMathHuge and "math.huge") or "1/0"
@@ -254,13 +256,17 @@ local function LuaEncode(inputTable, options)
 
     -- For pretty printing (which is optional) we need to keep track of the current stack level, then
     -- repeat IndentString by that count
-    local IndentString = string_rep(" ", IndentCount) -- If 0 this will just be ""
-    IndentString = (Prettify and string_rep(IndentString, StackLevel)) or IndentString
+    local IndentStringBase = string_rep(" ", IndentCount) -- If 0 this will just be ""
 
-    local EndingIndentString = (#IndentString > 0 and string_sub(IndentString, 1, -IndentCount - 1)) or ""
+    -- Calculated in the walk loop, based on the current StackLevel
+    local IndentString = nil
+    local EndingIndentString = nil
 
-    -- For number key values, incrementing the current internal index
-    local KeyIndex = 1
+    --IndentString = (Prettify and string_rep(IndentString, StackLevel)) or IndentString
+    --local EndingIndentString = (#IndentString > 0 and string_sub(IndentString, 1, -IndentCount - 1)) or ""
+
+    -- For number key values, we want to explicitly serialize the index num ONLY when it needs to be
+    local KeyNumIndex = 1
 
     -- Cases for encoding values, then end setup. Functions are all expected to return a (EncodedKey: string, EncloseInBrackets: boolean)
     local TypeCases = {} do
@@ -295,9 +301,9 @@ local function LuaEncode(inputTable, options)
         TypeCases["number"] = function(value, isKey)
             -- If the number isn't the current real index of the table, we DO want to
             -- explicitly define it in the serialization no matter what for accuracy
-            if isKey and value == KeyIndex then
+            if isKey and value == KeyNumIndex then
                 -- ^^ What's EXPECTED unless otherwise explicitly defined, if so, return no encoded num
-                KeyIndex = KeyIndex + 1
+                KeyNumIndex = KeyNumIndex + 1
                 return nil, true
             end
 
@@ -659,13 +665,18 @@ local function LuaEncode(inputTable, options)
     local NextKey = nil -- Used with TableStack so the TablePointer loop knows where to continue from upon stack pop
 
     -- Stack array for table depth
-    local TableStack = {} -- [Depth: number] = {TablePointer: table, NextKey: any}
+    local TableStack = {} -- [Depth: number] = {TablePointer: table, NextKey: any, KeyNumIndex: number}
 
     -- ALSO used for cycle detection
     local VisitedTables = {}
 
     while TablePointer do
-        -- Only append an opening to the output if this isn't just a continution up the stack
+        -- Update StackLevel for formatting
+        StackLevel = #TableStack + 1
+        IndentString = (Prettify and string_rep(IndentStringBase, StackLevel)) or IndentStringBase
+        EndingIndentString = (#IndentString > 0 and string_sub(IndentString, 1, -IndentCount - 1)) or ""
+
+        -- Only append an opening brace to the table if this isn't just a continution up the stack
         if not VisitedTables[TablePointer] then
             Output[#Output+1] = "{" 
         end
@@ -700,7 +711,7 @@ local function LuaEncode(inputTable, options)
                 -- Ignoring `if EncodedKeyOrError` because the key doesn't actually need to ALWAYS
                 -- be explicitly encoded, like if it's a number of the current key index!
                 if KeyEncodedSuccess and (ValueIsTable or (ValueEncodedSuccess and EncodedValueOrError)) then
-                    -- Append key
+                    -- Append explicit key if necessary
                     if EncodedKeyOrError then 
                         if DontEncloseKeyInBrackets then
                             Output[#Output+1] = EncodedKeyOrError
@@ -714,10 +725,11 @@ local function LuaEncode(inputTable, options)
                     -- Of course, recursive tables are handled differently and use the stack system
                     if ValueIsTable then
                         if not VisitedTables[Value] then
-                            TableStack[#TableStack+1] = {TablePointer, Key}
+                            TableStack[#TableStack+1] = {TablePointer, Key, KeyNumIndex}
 
                             TablePointer = Value
                             NextKey = nil
+                            KeyNumIndex = 1
     
                             SkipStackPop = true
                             break
@@ -763,7 +775,7 @@ local function LuaEncode(inputTable, options)
                 local TableUp = TableStack[#TableStack]
                 TableStack[#TableStack] = nil -- Pop off the table stack
     
-                TablePointer, NextKey = TableUp[1], TableUp[2]
+                TablePointer, NextKey, KeyNumIndex = TableUp[1], TableUp[2], TableUp[3]
     
                 -- We also need to add a comma for the next entry, since this was skipped for table depth continuation earlier 
                 Output[#Output+1] = ","
