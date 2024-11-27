@@ -706,8 +706,12 @@ local function LuaEncode(inputTable, options)
                     if ValueIsTable then
                         local IndexPath
                         if InsertCycles and KeyIndexTypes[KeyType] and RefMaps[TablePointer]  then
-                            local EncodedKeyAsValue = TypeCases[KeyType](Key)
-                            IndexPath = table_concat({"[", EncodedKeyAsValue, "]"})
+                            if KeyType == "string" and not LuaKeywords[Key] and string_match(Key, "^[A-Za-z_][A-Za-z0-9_]*$") then
+                                IndexPath = "." .. Key
+                            else
+                                local EncodedKeyAsValue = TypeCases[KeyType](Key)
+                                IndexPath = table_concat({"[", EncodedKeyAsValue, "]"})
+                            end
                         end
 
                         if not VisitedTables[Value] then
