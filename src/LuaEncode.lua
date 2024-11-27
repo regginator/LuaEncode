@@ -143,7 +143,7 @@ local EvaluateInstancePath do
 
                 Path = ":GetService(" .. SerializeString(ObjectClassName) .. ")" .. Path
             elseif not LuaKeywords[ObjectName] and string_match(ObjectName, "^[A-Za-z_][A-Za-z0-9_]*$") then
-                -- ^^ Like the `string` DataType, this means means we can index the name directly in Lua
+                -- ^^ Like the string data type, this means means we can index the name directly in Lua
                 -- without an explicit string
                 Path = "." .. ObjectName .. Path
             else
@@ -177,12 +177,13 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
     IndentCount <number:0> | The amount of "spaces" that should be indented per entry (*Note:
     If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically*)
 
+    InsertCycles <boolean:false> | If there are cyclic references in your table, the output
+    will be wrapped in an anonymous function that manually sets paths to those references.
+    **NOTE: If a key in the index path to the cycle is a reference type (e.g. `table`,
+    `function`), the codegen can't externally set that path, and will be ignored.**
+
     OutputWarnings <boolean:true> | If "warnings" should be placed to the output (as
     comments); It's recommended to keep this enabled, however this can be disabled at ease
-
-    StackLimit <number:500> | The limit to the stack level before recursive encoding cuts
-    off, and stops execution. This is used to prevent stack overflow errors and such. You
-    could use `math.huge` here if you really wanted
 
     FunctionsReturnRaw <boolean:false> | If functions in said table return back a "raw"
     value to place in the output as the key/value
@@ -209,8 +210,8 @@ local function LuaEncode(inputTable, options)
     CheckType(options.Prettify, "options.Prettify", "boolean", "nil")
     CheckType(options.PrettyPrinting, "options.PrettyPrinting", "boolean", "nil") -- Alias for `Options.Prettify`
     CheckType(options.IndentCount, "options.IndentCount", "number", "nil")
-    CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
     CheckType(options.InsertCycles, "options.InsertCycles", "boolean", "nil")
+    CheckType(options.OutputWarnings, "options.OutputWarnings", "boolean", "nil")
     CheckType(options.FunctionsReturnRaw, "options.FunctionsReturnRaw", "boolean", "nil")
     CheckType(options.UseInstancePaths, "options.UseInstancePaths", "boolean", "nil")
     CheckType(options.SerializeMathHuge, "options.SerializeMathHuge", "boolean", "nil")
@@ -220,8 +221,8 @@ local function LuaEncode(inputTable, options)
 
     local Prettify = (options.Prettify == nil and options.PrettyPrinting == nil and false) or (options.Prettify ~= nil and options.Prettify) or (options.PrettyPrinting and options.PrettyPrinting)
     local IndentCount = options.IndentCount or (Prettify and 4) or 0
-    local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
     local InsertCycles = (options.InsertCycles == nil and false) or options.InsertCycles
+    local OutputWarnings = (options.OutputWarnings == nil and true) or options.OutputWarnings
     local FunctionsReturnRaw = (options.FunctionsReturnRaw == nil and false) or options.FunctionsReturnRaw
     local UseInstancePaths = (options.UseInstancePaths == nil and true) or options.UseInstancePaths
     local SerializeMathHuge = (options.SerializeMathHuge == nil and true) or options.SerializeMathHuge
@@ -273,7 +274,7 @@ local function LuaEncode(inputTable, options)
             return table_concat(EncodedValues, ValueSeperator)
         end
 
-        -- For certain Roblox DataTypes, we use a custom serialization method for filling out params etc
+        -- For certain Roblox data types, we use a custom serialization method for filling out params etc
         local function Params(newData, params)
             return "(function(v, p) for pn, pv in next, p do v[pn] = pv end return v end)(" ..
                 table_concat({newData, TypeCase("table", params)}, ValueSeperator) ..
@@ -348,7 +349,7 @@ local function LuaEncode(inputTable, options)
             return "function() --[[LuaEncode: `options.FunctionsReturnRaw` false; can't serialize functions]] return end"
         end
 
-        ---------- ROBLOX CUSTOM DATATYPES BELOW ----------
+        ---------- ROBLOX CUSTOM DATA TYPES BELOW ----------
 
         TypeCases["Axes"] = function(value)
             local EncodedArgs = {}
@@ -741,7 +742,7 @@ local function LuaEncode(inputTable, options)
                     -- ^^ Then either the key or value wasn't properly checked or encoded, and there
                     -- was an error we need to log!
                     local ErrorMessage = string_format(
-                        "LuaEncode: Failed to encode %s of DataType %s: %s",
+                        "LuaEncode: Failed to encode %s of data type %s: %s",
                         (not KeyEncodedSuccess and "key") or (not ValueEncodedSuccess and "value") or "key/value",
                         ValueType,
                         (not KeyEncodedSuccess and SerializeString(EncodedKeyOrError)) or (not ValueEncodedSuccess and SerializeString(EncodedValueOrError)) or "(Failed to get error message)"
