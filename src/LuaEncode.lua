@@ -316,7 +316,7 @@ local function LuaEncode(inputTable, options)
         TypeCases["table"] = function(value, isKey)
             -- Primarily for tables-as-keys
             if VisitedTables[value] then
-                return "{--[[LuaEncode: Duplicate]]}"
+                return "{--[[LuaEncode: Duplicate reference]]}"
             end
 
             local NewOptions = setmetatable({}, {__index = options}) do
@@ -345,8 +345,10 @@ local function LuaEncode(inputTable, options)
                 return value()
             end
 
-            -- If all else, force key func to return nil; can't handle a func val..
-            return "function() --[[LuaEncode: `options.FunctionsReturnRaw` false; can't serialize functions]] return end"
+            return string_format(
+                "function()%sreturn end",
+                (OutputWarnings and " --[[LuaEncode: `options.FunctionsReturnRaw` false; can't serialize functions]] ") or ""
+            )
         end
 
         ---------- ROBLOX CUSTOM DATA TYPES BELOW ----------
