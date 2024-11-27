@@ -315,7 +315,7 @@ local function LuaEncode(inputTable, options)
         -- arguments for constructor functions
         TypeCases["table"] = function(value, isKey)
             -- Primarily for tables-as-keys
-            if VisitedTables[value] then
+            if VisitedTables[value] and OutputWarnings then
                 return "{--[[LuaEncode: Duplicate reference]]}"
             end
 
@@ -730,8 +730,8 @@ local function LuaEncode(inputTable, options)
                             break
                         else
                             EncodedValueOrError = string_format(
-                                "{--[[LuaEncode: Duplicate reference%s]]}",
-                                (Value == inputTable and " (of parent)") or ""
+                                "{%s}",
+                                (OutputWarnings and "--[[LuaEncode: Duplicate reference]]") or ""
                             )
 
                             if IndexPath then
