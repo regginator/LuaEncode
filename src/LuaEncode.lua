@@ -1,4 +1,4 @@
--- LuaEncode - Table Serialization Library for Pure Luau/Lua 5.1+
+-- LuaEncode - Fast Table Serialization Library for Pure Luau/Lua 5.1+
 -- Copyright (c) 2022-2024 reggie@latte.to | MIT License
 -- https://github.com/regginator/LuaEncode
 

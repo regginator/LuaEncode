@@ -17,7 +17,7 @@
 
 # LuaEncode
 
-Table Serialization Library for Pure Luau/Lua 5.1+
+Fast Table Serialization Library for Pure Luau/Lua 5.1+
 
 [![Latest Release][badges/latest-release]][latest-release] [![Last Modified][badges/last-modified]][commits] [![License][badges/license]][license] [![Wally][badges/wally]][wally]
 
