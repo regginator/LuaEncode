@@ -44,7 +44,7 @@ ___
 
 * ### Rojo/Wally
 
-    If you're familiar with [Rojo](https://rojo.space) and [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import the package in your `wally.toml` as a dependency:
+    If you're using [Rojo](https://rojo.space) and [Wally](https://wally.run/), you can import the package in your `wally.toml`:
 
     ```toml
     LuaEncode = "regginator/luaencode@1.4.1"
@@ -52,7 +52,7 @@ ___
 
 * ### Roblox Marketplace
 
-    You can also grab the LuaEncode module from the Roblox Marketplace directly: <https://roblox.com/library/1279112186>
+    You can also grab the LuaEncode module from the Roblox Marketplace directly: <https://roblox.com/library/12791121865>
 
 ___
 
