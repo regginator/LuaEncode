@@ -27,15 +27,15 @@ ___
 
 ## 🎉 About
 
-LuaEncode is a simple library for **serialization** of Lua tables and data structures. This natively supports both Luau (Vanilla *or* Roblox's implementation), and Lua 5.1+
+LuaEncode is a simple library for serialization of Lua tables and data structures, with support for Roblox's engine data types. LuaEncode natively supports both Luau and Lua 5.1+
 
 ### 🌟 Features
 
 * Serialization and output of basic types `number`, `string`, `table`, `boolean`, and `nil` for key/values
-* Pretty-printing and custom indentation config
-* Compatible with custom Roblox DataTypes (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - See **[Custom Roblox DataType Coverage](#custom-roblox-datatype-coverage)** for more info
-* Built with complete, secure iteration and value reading in mind
-* Cycle detection and [stack limit](#api)
+* Pretty-printing and custom indentation configuration
+* Compatible with custom Roblox data types (e.g. `Instance`, `UDim2`, `Vector3`, `DateTime`, etc..) - See **[Roblox Engine Data Type Coverage](#roblox-engine-data-type-coverage)** for more info
+* Securely iterates and reads values, with potentially untrusted inputs in-mind
+* Manual cycle inserts in serialized codegen with [`InsertCycles`](#api)
 * Raw key/value input with [`FunctionsReturnRaw`](#api)
 
 ___
@@ -70,7 +70,7 @@ local Table = {
         [5] = 5,
     },
     qux = function()
-        return "\"hi!\""
+        return "\"hi!\"" -- With `FunctionsReturnRaw` set as true in options, this will output as 'qux = "hi!"'
     end,
 }
 
@@ -117,15 +117,15 @@ LuaEncode(inputTable: {[any]: any}, options: {[string]: any}): string
 |:-------------------|:--------------------|:------------------------------------|
 | Prettify           | `<boolean:false>`  | Whether or not the output should use [pretty printing](https://en.wikipedia.org/wiki/Prettyprint#Programming_code_formatting) |
 | IndentCount        | `<number:0>`       | The amount of "spaces" that should be indented per entry (*Note: If `Prettify` is set to true and this is unspecified, it'll be set to `4` automatically*) |
+| InsertCycles       | `<boolean:false>`  | If there are cyclic references in your table, the output will be wrapped in an anonymous function that manually sets paths to those references. **NOTE: If a key in the index path to the cycle is a reference type (e.g. `table`, `function`), the codegen can't externally set that path, and will be ignored.** |
 | OutputWarnings     | `<boolean:true>`   | If "warnings" should be placed to the output (as comments); it's recommended to keep this enabled, however it can be disabled at ease |
-| StackLimit         | `<number:500>`     | The limit to the stack level before recursive encoding cuts off, and stops execution. This is used to prevent stack overflow errors and such. You could use `math.huge` here if you *really* wanted |
 | FunctionsReturnRaw | `<boolean:false>`  | If functions in said table return back a "raw" value to place in the output as the key/value |
 | UseInstancePaths   | `<boolean:true>`  | If `Instance` reference objects should return their Lua-accessable path for encoding. If the instance is parented under `nil` or isn't under `game`/`workspace`, it'll always fall back to `Instance.new(ClassName)` as before |
 | SerializeMathHuge  | `<boolean:true> ` | If numbers calculated as "infinite" (or negative-inf) numbers should be serialized with "math.huge". (uses the `math` import, as opposed to just a direct data type) If false, "`1/0`" or "`-1/0`" will be serialized, which is supported on all target versions |
 
 ___
 
-## Custom Roblox DataType Coverage
+## Roblox Engine Data Type Coverage
 
 *(See [AllRobloxTypes.server.lua](tests/RobloxTests/AllRobloxTypes.server.lua) for example input and (the current expected) output of ALL Roblox DataTypes.)*
 
