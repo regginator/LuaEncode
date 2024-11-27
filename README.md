@@ -47,7 +47,7 @@ ___
     If you're familiar with [Rojo](https://rojo.space) and [Wally](https://wally.run), you can either clone the repository and build the model yourself, or import the package in your `wally.toml` as a dependency:
 
     ```toml
-    LuaEncode = "regginator/luaencode@1.3.1"
+    LuaEncode = "regginator/luaencode@1.4.0"
     ```
 
 * ### Roblox Marketplace
