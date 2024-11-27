@@ -17,3 +17,7 @@ print(LuaEncode(Table, {
     Prettify = true,
     InsertCycles = true,
 }))
+print()
+print(LuaEncode(Table, {
+    InsertCycles = true,
+}))

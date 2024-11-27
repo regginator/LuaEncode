@@ -14,9 +14,9 @@ local Table = {
     end,
 }
 
-local Encoded = LuaEncode(Table, {
+print(LuaEncode(Table, {
     Prettify = true, -- `false` by default (when this is true, IndentCount is also 4!)
     FunctionsReturnRaw = true, -- `false` by default
-})
-
-print(Encoded)
+}))
+print()
+print(LuaEncode(Table))

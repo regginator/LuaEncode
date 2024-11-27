@@ -25,3 +25,5 @@ local Table = {
 print(LuaEncode(Table, {
     Prettify = true,
 }))
+print()
+print(LuaEncode(Table))
