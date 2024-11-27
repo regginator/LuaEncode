@@ -234,6 +234,7 @@ local function LuaEncode(inputTable, options)
     local PositiveInf = (SerializeMathHuge and "math.huge") or "1/0"
     local NegativeInf = (SerializeMathHuge and "-math.huge") or "-1/0"
     local NewEntryString = (Prettify and "\n") or ""
+    local CodegenNewline = (Prettify and "\n") or " "
     local ValueSeperator = (Prettify and ", ") or ","
     local BlankSeperator = (Prettify and " ") or ""
     local EqualsSeperator = (Prettify and " = ") or "="
@@ -785,11 +786,11 @@ local function LuaEncode(inputTable, options)
     if InsertCycles then
         local CycleMapsOut = {}
         for CycleIndex, CycleMap in next, CycleMaps do
-            CycleMapsOut[#CycleMapsOut+1] = IndentString .. "t" .. CycleIndex .. EqualsSeperator .. "t" .. CycleMap .. NewEntryString
+            CycleMapsOut[#CycleMapsOut+1] = IndentString .. "t" .. CycleIndex .. EqualsSeperator .. "t" .. CycleMap .. CodegenNewline
         end
 
         if #CycleMapsOut > 0 then
-            return table_concat({"(function(t)", NewEntryString, table_concat(CycleMapsOut), NewEntryString, IndentString, "return t", NewEntryString, "end)(", table_concat(Output), ")"})
+            return table_concat({"(function(t)", NewEntryString, table_concat(CycleMapsOut), NewEntryString, IndentString, "return t", CodegenNewline, "end)(", table_concat(Output), ")"})
         end
     end
 
