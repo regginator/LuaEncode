@@ -2,7 +2,7 @@
 local LuaEncode = string.sub(_VERSION, 1, 4) == "Luau" and require("../src/LuaEncode") or require("src/LuaEncode")
 
 local Table = {}
-for Index = 1, 10000 do
+for Index = 1, 50000 do
     Table[Index] = "Hello, world!"
 end
 
