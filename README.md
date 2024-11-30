@@ -47,7 +47,7 @@ ___
     If you're using [Rojo](https://rojo.space) and [Wally](https://wally.run/), you can import the package in your `wally.toml`:
 
     ```toml
-    LuaEncode = "regginator/luaencode@1.4.1"
+    LuaEncode = "regginator/luaencode@1.4.2"
     ```
 
 * ### Roblox Marketplace
