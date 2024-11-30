@@ -397,7 +397,7 @@ local function LuaEncode(inputTable, options)
 
         TypeCases["Color3"] = function(value)
             -- Using floats for RGB values, most accurate for direct serialization
-            return "Color3.new(" .. Args(value.R, value.G, value.B)
+            return "Color3.new(" .. Args(value.R, value.G, value.B) .. ")"
         end
 
         TypeCases["ColorSequence"] = function(value)
