@@ -86,7 +86,7 @@ local SerializeString do
         local Character = string_char(Index)
 
         if not SpecialCharacters[Character] and (Index < 32 or Index > 126) then
-            SpecialCharacters[Character] = "\\" .. Index
+            SpecialCharacters[Character] = string_format("\\x%02X", Index)
         end
     end
 
