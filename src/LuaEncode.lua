@@ -49,10 +49,11 @@ local KeyIndexTypes = LookupTable({
 -- Simple function for directly checking the type on values, with their input, variable name,
 -- and desired type name(s) to check
 local function CheckType(inputData, dataName, ...)
-    local ValidTypes = LookupTable({...})
+    local ValidTypes = {...}
+    local ValidTypesLookup = LookupTable(ValidTypes)
     local InputType = Type(inputData)
 
-    if not ValidTypes[InputType] then
+    if not ValidTypesLookup[InputType] then
         error(string_format(
             "LuaEncode: Incorrect type for `%s`: `%s` expected, got `%s`",
             dataName,
