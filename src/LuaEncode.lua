@@ -626,6 +626,10 @@ local function LuaEncode(inputTable, options)
             return "Vector3int16.new(" .. Args(value.X, value.Y, value.Z) .. ")"
         end
 
+        TypeCases["buffer"] = function(value)
+            return "buffer.fromstring(" .. SerializeString(buffer.tostring(value)) .. ")"
+        end
+		
         -- With userdata, just encode directly
         TypeCases["userdata"] = function(value)
             if getmetatable(value) ~= nil then -- Has mt
