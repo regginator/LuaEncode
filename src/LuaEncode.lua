@@ -634,6 +634,10 @@ local function LuaEncode(inputTable, options)
                 return "newproxy()" -- newproxy() defaults to false (no mt)
             end
         end
+
+        TypeCases["buffer"] = function(value)
+			return "buffer.fromstring(" .. Args(buffer.tostring(value)) .. ")"
+		end
     end
 
     -- Setup for final output, which will be concat together
